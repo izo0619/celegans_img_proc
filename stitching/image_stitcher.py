@@ -1,7 +1,6 @@
 from PIL import Image
 import os
 import glob
-import re
 
 
 # params
