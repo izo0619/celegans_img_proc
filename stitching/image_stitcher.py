@@ -28,7 +28,7 @@ def get_concat_v(im1, im2):
     dst.paste(im2, (0, im1.height))
     return dst
 
-# stiches one well together
+# stitches one well together
 # params: subdir - the subdirectory that contains the folder where the set of images lies in
 #         well - the letter of the well
 
@@ -41,9 +41,9 @@ def get_concat_v(im1, im2):
 #             - ...
 #     - p02-growth-H02-10X (sub directory)
 #     - ...
-def stich_well(subdir, well):
+def stitch_well(subdir, well):
     if os.path.isdir(os.path.join(root_path, subdir)):
-        dest_dir = root_path + '/' + subdir + '/stiched_images/'
+        dest_dir = root_path + '/' + subdir + '/stitched_images/'
         # creates a folder called stitched_images if it doesn't exist already
         if not os.path.exists(dest_dir):
             os.mkdir(dest_dir)
@@ -66,21 +66,22 @@ def stich_well(subdir, well):
                 # keep each row img in an array of img objects to concat into final prod
                 row_imgs.append(base_img)
 
-            # stich each stiched row together to form final image
+            # stitch each stitched row together to form final image
             final_img = row_imgs[0]
             for i in range(1,len(row_imgs)):
                 final_img = get_concat_v(final_img, row_imgs[i])
 
-            final_img.save(dest_dir + 'well-' + well + "-stiched" + ext)
+            final_img.save(dest_dir + 'well-' + well + "-stitched" + ext)
         except Exception as e:
             print("error while running well " + well + " in hour " + subdir + '\n')
             print(e)
 
-# stiches all wells in the directory together
-def stich_all_in_dir():
+# stitches all wells in the directory together
+def stitch_all_in_dir():
+    error_wells = {}
     for subdir in directory_contents:
         if os.path.isdir(os.path.join(root_path, subdir)):
-            dest_dir = root_path + '/' + subdir + '/stiched_images/'
+            dest_dir = root_path + '/' + subdir + '/stitched_images/'
             if not os.path.exists(dest_dir):
                 os.mkdir(dest_dir)
 
@@ -94,22 +95,22 @@ def stich_all_in_dir():
                     row_imgs = []
                     for i in range(rows):
                         # set first image (image on the far left of the row)
-                        base_img = Image.open(source_dir + name_header + well + '01_s' + str(i*cols+1) + ext)
+                        base_img = Image.open(source_dir + name_header + '_' + well + '01_s' + str(i*cols+1) + ext)
                         # loop through each column and add respective image
                         for j in range(1,cols):
-                            concat_img = Image.open(source_dir + name_header + well + '01_s' + str((i*cols) + j + 1) + ext)
+                            concat_img = Image.open(source_dir + name_header + '_' + well + '01_s' + str((i*cols) + j + 1) + ext)
                             base_img = get_concat_h(base_img, concat_img)
                         # keep each row img in an array of img objects to concat into final prod
                         row_imgs.append(base_img)
 
-                    # stich each stiched row together to form final image
+                    # stitch each stitched row together to form final image
                     final_img = row_imgs[0]
                     for i in range(1,len(row_imgs)):
                         final_img = get_concat_v(final_img, row_imgs[i])
 
-                    final_img.save(dest_dir + 'well-' + well + "-stiched" + ext)
+                    final_img.save(dest_dir + 'well-' + well + "-stitched" + ext)
                 except Exception as e:
-                    print("error while running well " + well + " in hour" + subdir)
+                    print("error while running well " + well + " in hour " + subdir)
                     print(e)
                     # store all error wells in a dictionary, should look like this but haven't really tested this part
                     # too much:
@@ -123,6 +124,4 @@ def stich_all_in_dir():
 def stitch_error_wells():
     for sd, w in error_wells.items():
         for well in w:
-            stich_well(sd,well)
-
-
+            stitch_well(sd,well)

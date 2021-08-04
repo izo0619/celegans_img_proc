@@ -104,11 +104,11 @@ def stich_all_in_dir():
 
 
 
-dest_dir = root_path + '/' + 'p48-growth-H48-10X_Plate_3287/'
+dest_dir = root_path + '/' + 'p04-growth-H04-10X/'
 
-source_dir = root_path + '/' + 'p48-growth-H48-10X_Plate_3287' + '/Well_B03_Corrected/'
+source_dir = root_path + '/' + 'p04-growth-H04-10X' + '/Well_A01_Corrected/'
     
-name_header = 'p48-growth-H48-10X_B03_s'
+name_header = 'p04-growth-H04-10X_A01_s'
 
 try:
     row_imgs = []
@@ -128,7 +128,7 @@ try:
     for i in range(1,len(row_imgs)):
         final_img = get_concat_v(final_img, row_imgs[i])
 
-    final_img.save(dest_dir + 'h48-well-b-basic-corrected-stiched' + ext)
+    final_img.save(dest_dir + 'h4-well-a-basic-corrected-stiched' + ext)
 except Exception as e:
     print("error while running well")
     print(e)
