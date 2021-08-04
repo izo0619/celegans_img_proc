@@ -17,7 +17,7 @@ def atan2deg(x):
     x*= 180/math.pi
     return x
 # import segmented image
-orig_img = imread('./segmentation_correction/h44/h44_sample_seg.tif')
+orig_img = imread('./segmentation_correction/h51/h51_sample_seg.tif')
 # orig_img = imread('./segmentation_correction/h44/h44_sample_seg.tif')
 orig_img = img_as_uint(orig_img)
 
@@ -148,13 +148,7 @@ fcc_s = CubicSmoothingSpline(fcc_x, full_curvature_cumul, smooth=0.00001).spline
 fcc_ds1 = fcc_s.derivative(nu=1)
 fcc_ds2 = fcc_s.derivative(nu=2)
 
-cross_x = []
-cross_y = []
-for i in range(len(full_curvature)*100):
-    val = fcc_ds2([i*0.01])[0]
-    if round(val*10**8) == 0:
-        cross_x.append(i*0.01)
-        cross_y.append(val)
+top_2_curve = (fcc_ds2.roots()[(fcc_ds1(fcc_ds2.roots())).argsort()])[-2:].astype(int)
 
 curve_idx = range(len(full_curvature))
 zipped_cur = zip(full_curvature, curve_idx)
@@ -175,23 +169,41 @@ full_bound_data_yi_w = full_bound_data_w[1]
 full_bound_data_xi_w_int = full_bound_data_xi_w.astype(int)
 full_bound_data_yi_w_int = full_bound_data_yi_w.astype(int)
 
-raw_img = imread('./segmentation_correction/h44/h44_sample_seg_orig.tif')
+raw_img = imread('./segmentation_correction/h51/h51_sample_seg_orig.tif')
 raw_img = color.gray2rgb(raw_img)
 raw_img[full_bound_data_yi_w_int, full_bound_data_xi_w_int] = (255,0,0)
 
 
 
 _, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(5, 6))
-ax1.plot(fcc_x, full_curvature_cumul, '.', fcc_x, fcc_s(fcc_x), '-')
+ax1.plot(fcc_x, full_curvature_cumul, '.', fcc_x, fcc_s(fcc_x), '-', label='cumulative curvature')
 ax2.plot(fcc_x, fcc_ds1(fcc_x), '-')
+ax2.plot(top_2_curve, fcc_ds1(top_2_curve), 'o', label='top 2 local max')
 ax3.plot(fcc_x, fcc_ds2(fcc_x), '-')
-ax3.plot(cross_x, cross_y, ':o')
+ax3.plot(fcc_ds2.roots(), fcc_ds2(fcc_ds2.roots()), ':o', label='roots')
 
 ax1.set_title('spline')
+ax1.set_ylabel('curvature')
+ax1.legend()
 ax2.set_title('1st derivative')
+ax2.legend()
 ax3.set_title('2nd derivative')
+ax3.set_xlabel('point idx')
+ax3.legend()
 plt.show()
 
+fig, (ax1, ax2) = plt.subplots(1,2)
+ax1.imshow(raw_img, cmap=plt.cm.gray)
+ax1.axis('off')
+
+ax2.set(xlim=(0, len(orig_img)), ylim=(0, len(orig_img)))
+ax2.invert_yaxis()
+plt.plot(sorted_points[0], sorted_points[1], '-', label='sorted points')
+plt.plot(sorted_points[0][top_2_curve[0]], sorted_points[1][top_2_curve[0]], 'o')
+plt.plot(sorted_points[0][top_2_curve[1]], sorted_points[1][top_2_curve[1]], 'o')
+plt.legend()
+
+plt.show()
 # fig, ax = plt.subplots()
 # ax.set(xlim=(0, len(orig_img)), ylim=(0, len(orig_img)))
 # ax.invert_yaxis()
