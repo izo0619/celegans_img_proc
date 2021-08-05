@@ -10,8 +10,9 @@ from skimage.measure import label, regionprops
 import numpy as np
 from csaps import csaps, CubicSmoothingSpline
 import math
-import scipy
 import conformalmapping as cm
+import scipy
+
 
 def do_kdtree(combined_x_y_arrays,points):
     mytree = scipy.spatial.cKDTree(combined_x_y_arrays)
@@ -175,7 +176,27 @@ raw_img = color.gray2rgb(raw_img)
 raw_img[sorted_points[1], sorted_points[0]] = (255,0,0)
 
 # create spline obj for confmap
+G = cm.Splinep(full_bound_data_xi_w[conf_map_points],full_bound_data_yi_w[conf_map_points])
+sm = cm.SzMap(G, 0)
+sm.plot()
+S = cm.Szego(G, 0)
+t = [full_bound_data_xi_w[conf_map_points],full_bound_data_yi_w[conf_map_points]]
 
+plt.subplot(1,2,1)
+G.plot()
+zs = G(t)
+plt.plot(zs.real, zs.imag, 'ro')
+plt.gca().set_aspect('equal')
+plt.gca().axis(G.plotbox())
+
+plt.subplot(1,2,2)
+c = cm.Circle(0, 1)
+c.plot()
+zs = np.exp(1.0j * S.theta(t))
+plt.plot(zs.real, zs.imag, 'ro')
+plt.gca().set_aspect('equal')
+plt.gca().axis(c.plotbox())
+plt.show()
 # _, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(5, 6))
 # ax1.plot(fcc_x, full_curvature_cumul, '.', fcc_x, fcc_s(fcc_x), '-', label='cumulative curvature')
 # ax2.plot(fcc_x, fcc_ds1(fcc_x), '-')
