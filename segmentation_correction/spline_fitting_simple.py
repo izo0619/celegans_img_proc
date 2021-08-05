@@ -11,13 +11,16 @@ import numpy as np
 from csaps import csaps, CubicSmoothingSpline
 import math
 import scipy
+import conformalmapping as cm
 
-def atan2deg(x):
-    x = x if x>=0 else (2*math.pi + x) 
-    x*= 180/math.pi
-    return x
+def do_kdtree(combined_x_y_arrays,points):
+    mytree = scipy.spatial.cKDTree(combined_x_y_arrays)
+    dist, indexes = mytree.query(points)
+    return [original_points[0][indexes[0]], original_points[1][indexes[0]], indexes[0], dist]
+
 # import segmented image
-orig_img = imread('./segmentation_correction/h51/h51_sample_seg.tif')
+orig_img = imread('./segmentation_correction/h44/h44_sample_seg.tif')
+raw_img = imread('./segmentation_correction/h44/h44_sample_seg_orig.tif')
 # orig_img = imread('./segmentation_correction/h44/h44_sample_seg.tif')
 orig_img = img_as_uint(orig_img)
 
@@ -66,7 +69,7 @@ state5 = np.copy(final)
 
 # only take the last worm
 for value in np.unique(final):
-    if value != 0 and value != np.unique(final)[1]:
+    if value != 0 and value != np.unique(final)[-1]:
         final[final == value] = 0
 
 worm_boundary = segmentation.find_boundaries(final, mode='inner')
@@ -74,29 +77,7 @@ worm_boundary = segmentation.find_boundaries(final, mode='inner')
 pixel_list_row = np.nonzero(worm_boundary)[0]
 pixel_list_col = np.nonzero(worm_boundary)[1]
 
-def do_kdtree(combined_x_y_arrays,points):
-    mytree = scipy.spatial.cKDTree(combined_x_y_arrays)
-    dist, indexes = mytree.query(points)
-    return [original_points[0][indexes[0]], original_points[1][indexes[0]], indexes[0], dist]
-
-def find_2_farthest_xy(x_array, y_array, x_point, y_point):
-    distance = (y_array-y_point)**2 + (x_array-x_point)**2
-    idx1 = np.where(distance==distance.max())
-    x_array = np.delete(x_array, idx1)
-    y_array = np.delete(y_array, idx1)
-    distance = (y_array-y_point)**2 + (x_array-x_point)**2
-    idx2 = np.where(distance==distance.max())
-    return [[x_array[idx1[0]][0], x_array[idx2[0]][0]], [y_array[idx1[0]][0], y_array[idx2[0][0]]]]
-
-def minmax(val_list):
-    min_val = min(val_list)
-    max_val = max(val_list)
-
-    return (min_val, max_val)
-
 original_points = [pixel_list_col, pixel_list_row]
-center = (sum(pixel_list_col) / len(pixel_list_col), sum(pixel_list_row) / len(pixel_list_row))
-# endpoints = find_2_farthest_xy(pixel_list_col, pixel_list_row, center[0], center[1])
 cur_point = [[original_points[0][0], original_points[1][0]]]
 cur_idx = 0
 sorted_points = [[original_points[0][0]],[original_points[1][0]]]
@@ -176,20 +157,24 @@ full_bound_data_xi_w_int = full_bound_data_xi_w.astype(int)
 full_bound_data_yi_w_int = full_bound_data_yi_w.astype(int)
 
 # find 20 points around worm
+top_2_curve = np.sort(top_2_curve)
 conf_map_points = [top_2_curve[0]]
-spacing = round(abs(top_2_curve[0]-top_2_curve[1])/18)
-spacing_level = [1,2,3,6,9,12,15,16,17]
-for i in range(9):
-    conf_map_points.append(round(top_2_curve[0] + (spacing * spacing_level[i])) % len(full_bound_data_xi))
+spacing_1 = round((top_2_curve[1]-top_2_curve[0])/36)
+spacing_2 = round((top_2_curve[0] + (len(full_bound_data_xi) - top_2_curve[1]))/36)
+# spacing_level = [1,2,3,4,6,8,10,12,14,15,16,17]
+spacing_level = [0.5,2,3,8,12,16,20,24,28,33,34,35.5]
+for i in range(len(spacing_level)):
+    conf_map_points.append(round(top_2_curve[0] + (spacing_1 * spacing_level[i])))
 conf_map_points.append(top_2_curve[1])
-for i in range(9):
-    conf_map_points.append(round(top_2_curve[1] + (spacing * spacing_level[i])) % len(full_bound_data_xi))
+for i in range(len(spacing_level)):
+    conf_map_points.append(round(top_2_curve[1] + (spacing_2 * spacing_level[i])) % len(full_bound_data_xi))
+conf_map_points.append(top_2_curve[0])
 
 
-raw_img = imread('./segmentation_correction/h51/h51_sample_seg_orig.tif')
 raw_img = color.gray2rgb(raw_img)
 raw_img[sorted_points[1], sorted_points[0]] = (255,0,0)
 
+# create spline obj for confmap
 
 # _, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(5, 6))
 # ax1.plot(fcc_x, full_curvature_cumul, '.', fcc_x, fcc_s(fcc_x), '-', label='cumulative curvature')
@@ -208,19 +193,21 @@ raw_img[sorted_points[1], sorted_points[0]] = (255,0,0)
 # ax3.legend()
 # plt.show()
 
-fig, (ax1, ax2) = plt.subplots(1,2)
-ax1.imshow(raw_img, cmap=plt.cm.gray)
-ax1.axis('off')
-ax1.plot(full_bound_data_xi_w[conf_map_points], full_bound_data_yi_w[conf_map_points], ':o')
+# fig, (ax1, ax2) = plt.subplots(1,2)
+# ax1.imshow(raw_img, cmap=plt.cm.gray)
+# ax1.axis('off')
+# ax1.plot(full_bound_data_xi_w[conf_map_points], full_bound_data_yi_w[conf_map_points], ':o')
 
-# ax2.imshow(final, cmap=plt.cm.gray)
-# ax2.axis('off')
-ax2.set(xlim=(0, len(orig_img)), ylim=(0, len(orig_img)))
-ax2.invert_yaxis()
-ax2.plot(sorted_points[0], sorted_points[1], '-', label='sorted points')
-ax2.plot(full_bound_data_xi_w[conf_map_points], full_bound_data_yi_w[conf_map_points], ':o')
-ax2.legend()
-plt.show()
+# # ax2.imshow(final, cmap=plt.cm.gray)
+# # ax2.axis('off')
+# ax2.set(xlim=(0, len(orig_img)), ylim=(0, len(orig_img)))
+# ax2.invert_yaxis()
+# ax2.plot(sorted_points[0], sorted_points[1], '-', label='sorted points')
+# ax2.plot(full_bound_data_xi_w[conf_map_points], full_bound_data_yi_w[conf_map_points], ':o')
+# ax2.plot(sorted_points[0][top_2_curve[0]], sorted_points[1][top_2_curve[0]], 'o')
+# ax2.plot(sorted_points[0][top_2_curve[1]], sorted_points[1][top_2_curve[1]], 'o')
+# ax2.legend()
+# plt.show()
 
 # fig, ([ax1, ax2, ax3], [ax4, ax5, ax6]) = plt.subplots(ncols=3, nrows=2, figsize=(18, 9), sharex=True,
 #                                    sharey=True)
