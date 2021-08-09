@@ -3,21 +3,23 @@ from skimage import segmentation, color
 from skimage.io import imread
 from skimage.morphology import (opening, remove_small_objects, area_closing, closing)
 from skimage.morphology import disk
-from skimage.morphology.grey import dilation, erosion
 from skimage.util.dtype import img_as_uint
 from scipy import ndimage
-from skimage.measure import label, regionprops
+from skimage.measure import label
 import numpy as np
 from csaps import csaps, CubicSmoothingSpline
-import math
 import conformalmapping as cm
 import scipy
-import cv2
+from polygon import polygon
+from diskmap import diskmap
 
 def do_kdtree(combined_x_y_arrays,points):
     mytree = scipy.spatial.cKDTree(combined_x_y_arrays)
     dist, indexes = mytree.query(points)
     return [original_points[0][indexes[0]], original_points[1][indexes[0]], indexes[0], dist]
+
+def plot_cmplx(z, *a, **k):
+    plt.plot(np.real(z), np.imag(z), *a, **k)
 
 # import segmented image
 orig_img = imread('./segmentation_correction/h44/h44_sample_seg.tif')
@@ -51,11 +53,11 @@ opened[opened == 2] = 0
 opened[opened == 3] = 0
 opened[opened == 4] = 1
 
-state1 = np.copy(opened)
 # perform opening again to get rid of any salt in the bg
 # fill_worm = opening(opened,disk(1))
 fill_worm = label(opened)
 fill_worm = remove_small_objects(fill_worm, 1000)
+state1 = np.copy(fill_worm)
 fill_worm = closing(fill_worm, disk(15))
 state2 = np.copy(fill_worm)
 # fill any holes in worm
@@ -63,9 +65,10 @@ fill_worm = ndimage.binary_fill_holes(fill_worm)
 state3 = np.copy(fill_worm)
 # label the objects in the photo
 fill_worm = label(fill_worm)
+state4 = np.copy(fill_worm)
 # remove any object that is less than 20,000 px in area
 final = remove_small_objects(fill_worm, 20000)
-state4 = np.copy(final)
+state5 = np.copy(final)
 
 # only take the last worm
 for value in np.unique(final):
@@ -168,26 +171,65 @@ for i in range(len(spacing_level)):
 conf_map_points.append(top_2_curve[1])
 for i in range(len(spacing_level)):
     conf_map_points.append(round(top_2_curve[1] + (spacing_2 * spacing_level[i])) % len(full_bound_data_xi))
-conf_map_points.append(top_2_curve[0])
+# conf_map_points.append(top_2_curve[0])
 
 
 raw_img = color.gray2rgb(raw_img)
 raw_img[sorted_points[1], sorted_points[0]] = (255,0,0)
 
-# create spline obj for confmap
+conf_map_points = np.sort(conf_map_points)
+# # create spline obj for confmap
 G = cm.Splinep(full_bound_data_xi_w[conf_map_points],full_bound_data_yi_w[conf_map_points])
+# creates riemann map via szego kernel, not sure what happens here but it just looks like the normal boundary when plotted??
 sm = cm.SzMap(G, 0)
-sm.plot()
+# szego object, identified by curve, center, and a bunch of kernel properties
 S = cm.Szego(G, 0)
+# points along the boundary, this is defined by some ratio of 0-1 along the spline
 t =  [x / len(full_bound_data_xi) for x in conf_map_points]
-# t = np.arange(20)/20.
+# t = np.arange(15)/15.
+print(conf_map_points)
+print(t)
 
-# plt.subplot(1,2,1)
-# G.plot()
-# zs = G(t)
+plt.subplot(1,2,1)
+# plt.plot(conf_map_points, range(len(conf_map_points)))
+# plt.plot(full_bound_data_xi_w[conf_map_points], full_bound_data_yi_w[conf_map_points], ":ro")
+# plt.plot(full_bound_data_xi_w[conf_map_points][6:15], full_bound_data_yi_w[conf_map_points][6:15], "bo")
+# plt.plot(full_bound_data_xi_w[conf_map_points][15:], full_bound_data_yi_w[conf_map_points][15:], "mo")
+# plt.plot(full_bound_data_xi_w[conf_map_points][1], full_bound_data_yi_w[conf_map_points][1], "gv")
+# plt.plot(full_bound_data_xi_w[conf_map_points][0], full_bound_data_yi_w[conf_map_points][0], "gv")
+# plt.plot(full_bound_data_xi_w[conf_map_points][2:6], full_bound_data_yi_w[conf_map_points][2:6], "yo")
+G.plot()
+zs = G(t)
+# plt.gca().invert_yaxis()
+# plt.plot(zs.real, zs.imag, 'ro')
+
+# plt.plot(zs.real[3:6], zs.imag[3:6], "yo")
+plt.scatter(zs.real, zs.imag, c=conf_map_points, cmap="cool", s=30)
+plt.plot(zs.real[0], zs.imag[0], 'ro', fillstyle='none')
+plt.plot(zs.real[1], zs.imag[1], 'ro', fillstyle='none')
+
+
+plt.subplot(1,2,2)
+c = cm.Circle(0, 1)
+c.plot()
+# calculates where each point goes in the circle???
+zs = np.exp(1.0j * S.theta(t))
+# plt.plot(zs.real, zs.imag, 'ro')
+# plt.plot(zs.real[6:15], zs.imag[6:15], 'bo')
+# plt.plot(zs.real[15:], zs.imag[15:], 'mo')
+plt.plot(zs.real[0], zs.imag[0], 'ro', fillstyle='none')
+plt.plot(zs.real[1], zs.imag[1], 'ro', fillstyle='none')
+# plt.plot(zs.real[3:6], zs.imag[3:6], "yo")
+plt.scatter(zs.real, zs.imag, c=conf_map_points, cmap="cool", s=30)
+# plt.plot(zs.real[2:6], zs.imag[2:6], 'yo')
+plt.gca().set_aspect('equal')
+plt.gca().axis(c.plotbox())
+plt.show()
+
+# G = np.dstack([full_bound_data_xi_w[conf_map_points].ravel(), full_bound_data_yi_w[conf_map_points].ravel()])[0]
+# G = np.array(list(map(lambda c: np.complex(*c), G)))
 # map_1 = np.float32(np.dstack([zs.real.ravel(), zs.imag.ravel()])[0])
 # print(map_1)
-# zs = np.exp(1.0j * S.theta(t))
 # map_2 = np.float32(np.dstack([zs.real.ravel(), zs.imag.ravel()])[0])
 # # M = cv2.getPerspectiveTransform(map_1,map_2)
 # # dst = cv2.warpPerspective(orig_img,M,np.shape(orig_img))
@@ -204,14 +246,40 @@ t =  [x / len(full_bound_data_xi) for x in conf_map_points]
 # plt.gca().set_aspect('equal')
 # plt.gca().axis(G.plotbox())
 
-# plt.subplot(1,2,2)
-# c = cm.Circle(0, 1)
-# c.plot()
+# p = polygon(G)
+# m = diskmap(p)
 
-# plt.plot(zs.real, zs.imag, 'ro')
-# plt.gca().set_aspect('equal')
-# plt.gca().axis(c.plotbox())
+# x,y = np.meshgrid(np.linspace(-0.8, 0.8, 9),
+#                   np.linspace(-0.99, 0.99, 100))
+
+# z = (x + y*1j)*(0.5 + 0.5j)
+# zi = z*1j
+# theta = np.linspace(0, 2*np.pi, 100)
+
+# plt.figure(figsize=(6.4, 3.2))
+
+# plt.subplot(1,2,1)
+# plt.axis('equal')
+# plt.axis('off')
+# plt.axis([-1,1,-1,1])
+# p.plot('r')
+# plot_cmplx(z, 'b')
+# plot_cmplx(zi, 'b')
+# plot_cmplx(p.vertex, '.y')
+
+# plt.subplot(1,2,2)
+# plt.axis('equal')
+# plt.axis('off')
+# plt.axis([-1,1,-1,1])
+# plot_cmplx(m.invmap(z), 'b')
+# plot_cmplx(m.invmap(zi.T).T, 'b')
+# plot_cmplx(np.exp(theta * 1j), 'r')
+# plot_cmplx(m.prevertex, '.y')
+
+# plt.tight_layout()
+# plt.savefig('fig1.eps')
 # plt.show()
+
 
 
 # _, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(5, 6))
@@ -249,29 +317,28 @@ t =  [x / len(full_bound_data_xi) for x in conf_map_points]
 
 # fig, ([ax1, ax2, ax3], [ax4, ax5, ax6]) = plt.subplots(ncols=3, nrows=2, figsize=(18, 9), sharex=True,
 #                                    sharey=True)
-# ax1.imshow(orig_img, cmap=plt.cm.gray)
+# ax1.imshow(state0, cmap=plt.cm.gray)
 # ax1.set_title('segmented')
 # ax1.axis('off')
 
-# ax2.imshow(state0, cmap=plt.cm.gray)
+# ax2.imshow(state1, cmap=plt.cm.gray)
 # ax2.set_title('opening')
 # ax2.axis('off')
 
-# ax3.imshow(state1, cmap=plt.cm.gray)
+# ax3.imshow(state2, cmap=plt.cm.gray)
 # ax3.set_title('combine bound and dark')
 # ax3.axis('off')
 
-# ax4.imshow(state2, cmap=plt.cm.gray)
-# ax4.set_title('remove small obj + closing')
+# ax4.imshow(state3, cmap=plt.cm.gray)
+# ax4.set_title('dilate (copy)')
 # ax4.axis('off')
 
 # ax5.imshow(state4, cmap=plt.cm.gray)
-# ax5.set_title('fill')
+# ax5.set_title('set intersection as bg')
 # ax5.axis('off')
 
-# ax6.imshow(segmentation.mark_boundaries(raw_img, fill_worm), cmap=plt.cm.gray)
-# ax6.contour(fill_worm, colors='red', linewidths=1)
-# ax6.set_title('boundary')
+# ax6.imshow(state5, cmap=plt.cm.gray)
+# ax6.set_title('remove bg')
 # ax6.axis('off')
 
 # plt.show()
