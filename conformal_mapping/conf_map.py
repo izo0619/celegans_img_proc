@@ -22,7 +22,7 @@ def plot_cmplx(z, *a, **k):
     plt.plot(np.real(z), np.imag(z), *a, **k)
 
 # import segmented image
-orig_img = imread('./segmentation_correction/h44/h44_sample_seg.tif')
+orig_img = imread('./segmentation_correction/h26/h44_sample_seg.tif')
 raw_img = imread('./segmentation_correction/h44/h44_sample_seg_orig.tif')
 # orig_img = imread('./segmentation_correction/h44/h44_sample_seg.tif')
 orig_img = img_as_uint(orig_img)
