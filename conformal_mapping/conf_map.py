@@ -22,7 +22,7 @@ def plot_cmplx(z, *a, **k):
     plt.plot(np.real(z), np.imag(z), *a, **k)
 
 # import segmented image
-orig_img = imread('./segmentation_correction/h26/h44_sample_seg.tif')
+orig_img = imread('./segmentation_correction/h44/h44_sample_seg.tif')
 raw_img = imread('./segmentation_correction/h44/h44_sample_seg_orig.tif')
 # orig_img = imread('./segmentation_correction/h44/h44_sample_seg.tif')
 orig_img = img_as_uint(orig_img)
@@ -179,16 +179,31 @@ raw_img[sorted_points[1], sorted_points[0]] = (255,0,0)
 
 conf_map_points = np.sort(conf_map_points)
 # # create spline obj for confmap
-G = cm.Splinep(full_bound_data_xi_w[conf_map_points],full_bound_data_yi_w[conf_map_points])
+G = cm.Splinep(full_bound_data_xi_w[conf_map_points][::-1],full_bound_data_yi_w[conf_map_points][::-1])
 # creates riemann map via szego kernel, not sure what happens here but it just looks like the normal boundary when plotted??
 sm = cm.SzMap(G, 0)
 # szego object, identified by curve, center, and a bunch of kernel properties
 S = cm.Szego(G, 0)
 # points along the boundary, this is defined by some ratio of 0-1 along the spline
-t =  [x / len(full_bound_data_xi) for x in conf_map_points]
-# t = np.arange(15)/15.
+t =  [ 1 - (x / len(full_bound_data_xi))for x in conf_map_points]
+# t = np.arange(8)/8.
 print(conf_map_points)
 print(t)
+
+# np.set_printoptions(precision=4, suppress=True, linewidth=15)
+# N = 26
+# th= 2*np.pi*np.arange(N)/float(N)
+# t = S.invtheta(th)
+# w = G(t)
+# c = np.fft.fft(w)/float(N)
+# f = lambda z : np.polyval(cm.helpers.flipud(c),z)
+# gd = cm.unitdisk().grid()
+# lst = []
+# for curve in gd.curves:
+#     newcurve = f(curve)
+#     lst.append(newcurve)
+# gc = cm.GridCurves(lst)
+
 
 plt.subplot(1,2,1)
 # plt.plot(conf_map_points, range(len(conf_map_points)))
@@ -199,14 +214,15 @@ plt.subplot(1,2,1)
 # plt.plot(full_bound_data_xi_w[conf_map_points][0], full_bound_data_yi_w[conf_map_points][0], "gv")
 # plt.plot(full_bound_data_xi_w[conf_map_points][2:6], full_bound_data_yi_w[conf_map_points][2:6], "yo")
 G.plot()
+# gc.plot()
 zs = G(t)
 # plt.gca().invert_yaxis()
 # plt.plot(zs.real, zs.imag, 'ro')
 
 # plt.plot(zs.real[3:6], zs.imag[3:6], "yo")
-plt.scatter(zs.real, zs.imag, c=conf_map_points, cmap="cool", s=30)
-plt.plot(zs.real[0], zs.imag[0], 'ro', fillstyle='none')
-plt.plot(zs.real[1], zs.imag[1], 'ro', fillstyle='none')
+plt.scatter(zs.real, zs.imag, c=t, cmap="cool", s=30)
+plt.plot(zs.real[-2], zs.imag[-2], 'ro', fillstyle='none')
+plt.plot(zs.real[-1], zs.imag[-1], 'ro', fillstyle='none')
 
 
 plt.subplot(1,2,2)
@@ -217,10 +233,10 @@ zs = np.exp(1.0j * S.theta(t))
 # plt.plot(zs.real, zs.imag, 'ro')
 # plt.plot(zs.real[6:15], zs.imag[6:15], 'bo')
 # plt.plot(zs.real[15:], zs.imag[15:], 'mo')
-plt.plot(zs.real[0], zs.imag[0], 'ro', fillstyle='none')
-plt.plot(zs.real[1], zs.imag[1], 'ro', fillstyle='none')
+plt.plot(zs.real[-1], zs.imag[-1], 'ro', fillstyle='none')
+plt.plot(zs.real[-2], zs.imag[-2], 'ro', fillstyle='none')
 # plt.plot(zs.real[3:6], zs.imag[3:6], "yo")
-plt.scatter(zs.real, zs.imag, c=conf_map_points, cmap="cool", s=30)
+plt.scatter(zs.real, zs.imag, c=t, cmap="cool", s=30)
 # plt.plot(zs.real[2:6], zs.imag[2:6], 'yo')
 plt.gca().set_aspect('equal')
 plt.gca().axis(c.plotbox())
