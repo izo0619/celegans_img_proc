@@ -22,8 +22,8 @@ def plot_cmplx(z, *a, **k):
     plt.plot(np.real(z), np.imag(z), *a, **k)
 
 # import segmented image
-orig_img = imread('./segmentation_correction/h44/h44_sample_seg.tif')
-raw_img = imread('./segmentation_correction/h44/h44_sample_seg_orig.tif')
+orig_img = imread('./segmentation_correction/h48/h48_sample_seg.tif')
+raw_img = imread('./segmentation_correction/h48/h48_sample_seg_orig.tif')
 # orig_img = imread('./segmentation_correction/h44/h44_sample_seg.tif')
 orig_img = img_as_uint(orig_img)
 
@@ -72,7 +72,7 @@ state5 = np.copy(final)
 
 # only take the last worm
 for value in np.unique(final):
-    if value != 0 and value != np.unique(final)[-1]:
+    if value != 0 and value != np.unique(final)[1]:
         final[final == value] = 0
 
 worm_boundary = segmentation.find_boundaries(final, mode='inner')
@@ -177,6 +177,7 @@ for i in range(len(spacing_level)):
 raw_img = color.gray2rgb(raw_img)
 raw_img[sorted_points[1], sorted_points[0]] = (255,0,0)
 
+conf_map_points = [ len(full_bound_data_xi)- 1 - x for x in conf_map_points ]
 conf_map_points = np.sort(conf_map_points)
 # # create spline obj for confmap
 G = cm.Splinep(full_bound_data_xi_w[conf_map_points][::-1],full_bound_data_yi_w[conf_map_points][::-1])
@@ -185,7 +186,7 @@ sm = cm.SzMap(G, 0)
 # szego object, identified by curve, center, and a bunch of kernel properties
 S = cm.Szego(G, 0)
 # points along the boundary, this is defined by some ratio of 0-1 along the spline
-t =  [ 1 - (x / len(full_bound_data_xi))for x in conf_map_points]
+t =  [ x / len(full_bound_data_xi)for x in conf_map_points]
 # t = np.arange(8)/8.
 print(conf_map_points)
 print(t)
@@ -221,8 +222,8 @@ zs = G(t)
 
 # plt.plot(zs.real[3:6], zs.imag[3:6], "yo")
 plt.scatter(zs.real, zs.imag, c=t, cmap="cool", s=30)
-plt.plot(zs.real[-2], zs.imag[-2], 'ro', fillstyle='none')
-plt.plot(zs.real[-1], zs.imag[-1], 'ro', fillstyle='none')
+plt.plot(zs.real[0], zs.imag[0], 'ro', fillstyle='none')
+plt.plot(zs.real[1], zs.imag[1], 'ro', fillstyle='none')
 
 
 plt.subplot(1,2,2)
@@ -233,8 +234,8 @@ zs = np.exp(1.0j * S.theta(t))
 # plt.plot(zs.real, zs.imag, 'ro')
 # plt.plot(zs.real[6:15], zs.imag[6:15], 'bo')
 # plt.plot(zs.real[15:], zs.imag[15:], 'mo')
-plt.plot(zs.real[-1], zs.imag[-1], 'ro', fillstyle='none')
-plt.plot(zs.real[-2], zs.imag[-2], 'ro', fillstyle='none')
+plt.plot(zs.real[1], zs.imag[1], 'ro', fillstyle='none')
+plt.plot(zs.real[0], zs.imag[0], 'ro', fillstyle='none')
 # plt.plot(zs.real[3:6], zs.imag[3:6], "yo")
 plt.scatter(zs.real, zs.imag, c=t, cmap="cool", s=30)
 # plt.plot(zs.real[2:6], zs.imag[2:6], 'yo')
