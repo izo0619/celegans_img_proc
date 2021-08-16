@@ -11,12 +11,24 @@ G = Splinep.from_complex_list([
     0.3099 - 0.6023j, 0.7427 - 0.5906j, 1.1053 - 0.1813j,
     1.2807 + 0j 
 ])
-G = Splinep.from_complex_list([ 
-    # -1 + 1j, 0+ 1.5j, 1 + 1j, 0.5 + 0j, 1 - 1j, 0 - 1.5j, -1 - 1j, -0.5 + 0j
-    -1 + 1j, -0.5 + 0j, -1 - 1j, 0 - 1.5j, 1 - 1j, 0.5 + 0j, 1 + 1j, 0 + 1.5j
-])
+# G = Splinep.from_complex_list([ 
+#     # -1 + 1j, 0+ 1.5j, 1 + 1j, 0.5 + 0j, 1 - 1j, 0 - 1.5j, -1 - 1j, -0.5 + 0j
+#     -1 + 1j, -0.5 + 0j, -1 - 1j, 0 - 1.5j, 1 - 1j, 0.5 + 0j, 1 + 1j, 0 + 1.5j
+# ])
+# G = Splinep.from_complex_list([ 
+#     -1 + 1j, 0+ 1.5j, 1 + 1j, 0.5 + 0j, 1 - 1j, 0 - 1.5j, -1 - 1j, -0.5 + 0j
+# ])
 # G = Splinep.from_complex_list([ 
 #     -1 + 1j, 1 + 1j, 1 - 1j, -1 - 1j
+# ])
+# G = Splinep.from_complex_list([ 
+#     -1 + 1j, -1 - 1j, 1 - 1j, 1 + 1j
+# ])
+G = Splinep.from_complex_list([ 
+    -1 + 1j, -1 + 0j, -1 - 1j, 0 - 1j, 1 - 1j, 1 + 0j, 1 + 1j, 0 + 1j
+])
+# G = Splinep.from_complex_list([ 
+#     -1 + 1j, 0 + 1j, 1 + 1j, 1 + 0j, 1 - 1j, 0 - 1j, -1 - 1j, -1 + 0j
 # ])
 sm = SzMap(G, 0)
 sm.plot()
