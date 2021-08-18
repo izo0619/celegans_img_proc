@@ -197,58 +197,75 @@ S = cm.Szego(G, 0)
 # points along the boundary, this is defined by some ratio of 0-1 along the spline
 t =  [ x / len(full_bound_data_xi)for x in conf_map_points]
 # t = np.arange(8)/8.
-pts1 = np.float32(np.dstack([full_bound_data_xi_w[conf_map_points][:3].ravel(), full_bound_data_yi_w[conf_map_points][:3].ravel()])[0])
-print(pts1)
+# pts1 = np.float32(np.dstack([full_bound_data_xi_w[conf_map_points][:3].ravel(), full_bound_data_yi_w[conf_map_points][:3].ravel()])[0])
+# print(pts1)
 
-# np.set_printoptions(precision=4, suppress=True, linewidth=15)
-# N = 26
-# th= 2*np.pi*np.arange(N)/float(N)
-# t = S.invtheta(th)
-# w = G(t)
-# c = np.fft.fft(w)/float(N)
-# f = lambda z : np.polyval(cm.helpers.flipud(c),z)
-# gd = cm.unitdisk().grid()
-# lst = []
-# for curve in gd.curves:
-#     newcurve = f(curve)
-#     lst.append(newcurve)
-# gc = cm.GridCurves(lst)
-
+zs = G(t)
+np.set_printoptions(precision=4, suppress=True, linewidth=15)
+N = 26
+th= 2*np.pi*np.arange(N)/float(N)
+t = S.invtheta(th)
+w = G(t)
+c = np.fft.fft(w)/float(N)
+f = lambda z : np.polyval(cm.helpers.flipud(c),z)
+gd = cm.unitdisk().grid()
+lst = []
+for curve in gd.curves:
+    newcurve = f(curve)
+    # newcurve = sm.applyMap(curve)
+    lst.append(newcurve)
+gc = cm.GridCurves(lst)
+gc.plot()
+orig_gc = cm.GridCurves(gd.curves)
+orig_gc.plot()
+G.plot()
+plt.gca().set_aspect('equal')
+plt.gca().axis(G.plotbox())
+ax = plt.gca()
+ax.set_xticks([]) 
+ax.set_yticks([]) 
+plt.show()
 
 # plt.subplot(1,2,1)
 # G.plot()
-zs = G(t)
-# plt.gca().invert_yaxis()
+# zs = G(t)
+# # plt.gca().invert_yaxis()
 # plt.scatter(zs.real, zs.imag, c=t, cmap="cool", s=30)
 # plt.plot(zs.real[0], zs.imag[0], 'ro', fillstyle='none')
 # plt.plot(zs.real[1], zs.imag[1], 'ro', fillstyle='none')
+# plt.plot(sm.applyMap([0.1 + 0.5j, 0.3+0.2j]), 'ro')
+# plt.plot(sm.applyMap([0 + 1j, 1+0j]), 'go')
 
-
+# print(sm.applyMap([569 + 213j, 2+5j]))
 # plt.subplot(1,2,2)
-c = cm.Circle(0, 1)
+# c = cm.Circle(0, 1)
 # c.plot()
-# calculates where each point goes in the circle???
-zs = np.exp(1.0j * S.theta(t))
+# # calculates where each point goes in the circle???
+# zs = np.exp(1.0j * S.theta(t))
 # plt.plot(zs.real[1], zs.imag[1], 'ro', fillstyle='none')
 # plt.plot(zs.real[0], zs.imag[0], 'ro', fillstyle='none')
 # plt.scatter(zs.real, zs.imag, c=t, cmap="cool", s=30)
+# plt.plot(0.1, 0.5, 'ro')
+# plt.plot(0.3, 0.2, 'ro')
+# plt.plot(0, 1, 'go')
+# plt.plot(1, 0, 'go')
 # plt.gca().set_aspect('equal')
 # plt.gca().axis(c.plotbox())
 # plt.show()
 
-pts2 = np.float32(np.dstack([(zs.real[:3]*np.shape(orig_img)[0]).ravel(), (zs.imag[:3]*np.shape(orig_img)[1]).ravel()])[0])
-print(pts2)
-M = cv2.getAffineTransform(pts1, pts2)
-dst = cv2.warpAffine(orig_img,M,np.shape(orig_img))
-plt.subplot(121)
-plt.imshow(orig_img, cmap=plt.cm.gray)
-plt.title('Input')
+# pts2 = np.float32(np.dstack([(zs.real[:3]*np.shape(orig_img)[0]).ravel(), (zs.imag[:3]*np.shape(orig_img)[1]).ravel()])[0])
+# print(pts2)
+# M = cv2.getAffineTransform(pts1, pts2)
+# dst = cv2.warpAffine(orig_img,M,np.shape(orig_img))
+# plt.subplot(121)
+# plt.imshow(orig_img, cmap=plt.cm.gray)
+# plt.title('Input')
   
-plt.subplot(122)
-plt.imshow(dst, cmap=plt.cm.gray)
-plt.title('Output')
+# plt.subplot(122)
+# plt.imshow(dst, cmap=plt.cm.gray)
+# plt.title('Output')
   
-plt.show()
+# plt.show()
 
 # G = np.dstack([full_bound_data_xi_w[conf_map_points].ravel(), full_bound_data_yi_w[conf_map_points].ravel()])[0]
 # G = np.array(list(map(lambda c: np.complex(*c), G)))

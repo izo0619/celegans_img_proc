@@ -24,9 +24,9 @@ G = Splinep.from_complex_list([
 # G = Splinep.from_complex_list([ 
 #     -1 + 1j, -1 - 1j, 1 - 1j, 1 + 1j
 # ])
-G = Splinep.from_complex_list([ 
-    -1 + 1j, -1 + 0j, -1 - 1j, 0 - 1j, 1 - 1j, 1 + 0j, 1 + 1j, 0 + 1j
-])
+# G = Splinep.from_complex_list([ 
+#     -1 + 1j, -1 + 0j, -1 - 1j, 0 - 1j, 1 - 1j, 1 + 0j, 1 + 1j, 0 + 1j
+# ])
 # G = Splinep.from_complex_list([ 
 #     -1 + 1j, 0 + 1j, 1 + 1j, 1 + 0j, 1 - 1j, 0 - 1j, -1 - 1j, -1 + 0j
 # ])
@@ -48,23 +48,62 @@ G.plot()
 # plt.plot(cl.real, cl.imag, ':o')
 
 zs = G(t)
-# plt.plot(zs.real, zs.imag, 'ro')
-plt.scatter(zs.real, zs.imag, c=t, cmap="cool", s=30)
-plt.plot(zs.real[0], zs.imag[0], 'bo', fillstyle='none')
-plt.plot(zs.real[1], zs.imag[1], 'bo', fillstyle='none')
+np.set_printoptions(precision=4, suppress=True, linewidth=15)
+N = 512
+th= 2*np.pi*np.arange(N)/float(N)
+t_2 = S.invtheta(th)
+w = G(t_2)
+c = np.fft.fft(w)/float(N)
+f = lambda z : np.polyval(helpers.flipud(c),z)
+gd = unitdisk().grid()
+lst = []
+for curve in gd.curves:
+    newcurve = f(curve)
+    lst.append(newcurve)
+gc = GridCurves(lst)
+gc_orig = GridCurves(gd.curves)
+# gc_orig.plot()
+# gc.plot()
+# G.plot()
 # plt.gca().set_aspect('equal')
 # plt.gca().axis(G.plotbox())
+# ax = plt.gca()
+# ax.set_xticks([]) 
+# ax.set_yticks([]) 
+# plt.show()
+
+
+# plt.plot(zs.real, zs.imag, 'ro')
+# plt.scatter(zs.real, zs.imag, c=t, cmap="cool", s=30)
+plt.plot()
+plt.plot(0.1, 0.5, 'bo')
+plt.plot(0.3, 0.2, 'mo')
+plt.plot(0, 1, 'go')
+plt.plot(1, 0, 'ro')
+plt.plot(zs.real[0], zs.imag[0], 'yo')
+gc.plot()
+# plt.plot(zs.real[0], zs.imag[0], 'bo', fillstyle='none')
+# plt.plot(zs.real[1], zs.imag[1], 'bo', fillstyle='none')
+plt.gca().set_aspect('equal')
+plt.gca().axis(G.plotbox())
 
 
 plt.subplot(1,2,2)
 c = Circle(0, 1)
 c.plot()
-print(S.theta(t))
+gc_orig.plot()
+
 zs = np.exp(1.0j * S.theta(t))
+plt.plot(sm.applyMap([0.1 + 0.5j]), 'bo')
+plt.plot(sm.applyMap([0.3+0.2j]), 'mo')
+plt.plot(sm.applyMap([0 + 1j]), 'go')
+plt.plot(sm.applyMap([1+0j]), 'ro')
+plt.plot(sm.applyMap(zs[0]), 'yo')
+
 # plt.plot(zs.real, zs.imag, 'ro')
-plt.scatter(zs.real, zs.imag, c=t, cmap="cool", s=30)
-plt.plot(zs.real[0], zs.imag[0], 'bo', fillstyle='none')
-plt.plot(zs.real[1], zs.imag[1], 'bo', fillstyle='none')
+# plt.scatter(zs.real, zs.imag, c=t, cmap="cool", s=30)
+# plt.plot(zs.real[0], zs.imag[0], 'bo', fillstyle='none')
+# plt.plot(zs.real[1], zs.imag[1], 'bo', fillstyle='none')
 plt.gca().set_aspect('equal')
 plt.gca().axis(c.plotbox())
 plt.show()
