@@ -197,22 +197,26 @@ S = cm.Szego(G, 0)
 # points along the boundary, this is defined by some ratio of 0-1 along the spline
 t =  [ x / len(full_bound_data_xi)for x in conf_map_points]
 # t = np.arange(8)/8.
-# pts1 = np.float32(np.dstack([full_bound_data_xi_w[conf_map_points][:3].ravel(), full_bound_data_yi_w[conf_map_points][:3].ravel()])[0])
+pts1 = np.dstack([full_bound_data_xi_w[conf_map_points].ravel(), full_bound_data_yi_w[conf_map_points].ravel()])[0]
+print(pts1)
+com = np.average(pts1, axis=0)
+print(com)
+
 # print(pts1)
 
 zs = G(t)
-# np.set_printoptions(precision=4, suppress=True, linewidth=15)
-# N = 26
-# th= 2*np.pi*np.arange(N)/float(N)
-# t = S.invtheta(th)
-# w = G(t)
-# c = np.fft.fft(w)/float(N)
-# f = lambda z : np.polyval(cm.helpers.flipud(c),z)
+np.set_printoptions(precision=4, suppress=True, linewidth=15)
+N = 10
+th= 2*np.pi*np.arange(N)/float(N)
+t_2 = S.invtheta(th)
+w = G(t_2)
+c = np.fft.fft(w)/float(N)
+f = lambda z : np.polyval(cm.helpers.flipud(c),z)
 gd = cm.unitdisk().grid()
 lst = []
 for curve in gd.curves:
-    # newcurve = f(curve)
-    newcurve = sm.applyMap(curve)
+    newcurve = f(curve)
+    # newcurve = sm.applyMap(curve)
     lst.append(newcurve)
 gc = cm.GridCurves(lst)
 # gc.plot()
@@ -227,6 +231,7 @@ orig_gc = cm.GridCurves(gd.curves)
 # plt.show()
 
 plt.subplot(1,2,1)
+gc.plot()
 G.plot()
 zs = G(t)
 # plt.gca().invert_yaxis()
@@ -236,8 +241,9 @@ plt.plot(sm.applyMap([0.3+0.2j]).real, sm.applyMap([0.3+0.2j]).imag, 'mo')
 plt.plot(sm.applyMap([0 + 1j]).real, sm.applyMap([0 + 1j]).imag, 'go')
 # plt.plot(sm.applyMap([1+0j]).real, sm.applyMap([1+0j]).imag, 'ro')
 plt.plot(sm.applyMap(zs[0]).real, sm.applyMap(zs[0]).imag, 'yo')
-# plt.plot(sm.applyMap([2+0j]).real, sm.applyMap([2+0j]).imag, 'co')
-gc.plot()
+plt.plot(sm.applyMap([0+0j]).real, sm.applyMap([0+0j]).imag, 'co')
+plt.plot(com[0], com[1], 'ro')
+
 
 plt.subplot(1,2,2)
 c = cm.Circle(0, 1)
@@ -251,9 +257,9 @@ orig_gc.plot()
 plt.plot(0.1, 0.5, 'bo')
 plt.plot(0.3, 0.2, 'mo')
 plt.plot(0, 1, 'go')
-plt.plot(1, 0, 'ro')
+# plt.plot(1, 0, 'ro')
 plt.plot(zs.real[0], zs.imag[0], 'yo')
-plt.plot(2, 0, 'co')
+plt.plot(0, 0, 'co')
 plt.gca().set_aspect('equal')
 plt.gca().axis(c.plotbox())
 plt.show()
