@@ -35,6 +35,26 @@ G = Splinep.from_complex_list([
 # G = Splinep.from_complex_list([ 
 #     -1 + 1j, -1 + 0j, -1 - 1j, 0 - 1j, 1 - 1j, 1 + 0j, 1 + 1j, 0 + 1j
 # ])
+
+# skinny diagonal 
+# G = Splinep.from_complex_list([ 
+#     -3 + 3j, -0.3 - 0.3j, 3 - 3j, 0.3 + 0.3j
+# ])
+# # skinny vertical
+# G = Splinep.from_complex_list([ 
+#     0 + 0.12j, -1 + 0j,  0 - 0.12j, 1 + 0j,
+# ])
+# skinny rectangle
+# G = Splinep.from_complex_list([ 
+#     0 + 0.2j, -1.5 + 0.2j, -2 + 0.2j, -2 - 0.2j, -1.5 - 0.2j, 0 - 0.2j, 1.5 - 0.2j, 2 - 0.2j, 2 + 0.2j, 1.5 + 0.2j
+# ])
+# u shape??
+# G = Splinep.from_complex_list([ 
+#     -2 + 4j, 0 + 1j, 2 + 4j, 1 + 3.5j, 0 + 2.5j, -1 + 3.5j
+# ])
+G_lst = np.array([ 
+    -2 + 1j, 0 - 2j, 2 + 1j, 1 + 0.5j, 0 - 0.5j, -1 + 0.5j
+])
 # G = Splinep.from_complex_list([ 
 #     -1 + 1j, 0 + 1j, 1 + 1j, 1 + 0j, 1 - 1j, 0 - 1j, -1 - 1j, -1 + 0j
 # ])
@@ -74,8 +94,8 @@ gc_orig = GridCurves(gd.curves)
 # gc_orig.plot()
 # gc.plot()
 # G.plot()
-# plt.gca().set_aspect('equal')
-# plt.gca().axis(G.plotbox())
+plt.gca().set_aspect('equal')
+plt.gca().axis(G.plotbox())
 # ax = plt.gca()
 # ax.set_xticks([]) 
 # ax.set_yticks([]) 
@@ -91,12 +111,12 @@ plt.plot(sm.applyMap([0 + 1j]).real, sm.applyMap([0 + 1j]).imag, 'go')
 plt.plot(sm.applyMap([1+0j]).real, sm.applyMap([1+0j]).imag, 'ro')
 plt.plot(sm.applyMap(zs[0]).real, sm.applyMap(zs[0]).imag, 'yo')
 plt.plot(sm.applyMap([2+0j]).real, sm.applyMap([2+0j]).imag, 'co')
+# plt.plot(G_lst.real, G_lst.imag, 'co')
 gc.plot()
 # plt.plot(zs.real[0], zs.imag[0], 'bo', fillstyle='none')
 # plt.plot(zs.real[1], zs.imag[1], 'bo', fillstyle='none')
 plt.gca().set_aspect('equal')
 plt.gca().axis(G.plotbox())
-print(sm.applyMap([2+0j]))
 plt.subplot(1,2,2)
 c = Circle(0, 1)
 c.plot()
