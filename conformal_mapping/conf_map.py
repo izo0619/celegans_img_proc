@@ -13,6 +13,7 @@ import scipy
 from polygon import polygon
 from diskmap import diskmap
 import cv2
+from aaapy.aaa import aaa
 
 def do_kdtree(combined_x_y_arrays,points):
     mytree = scipy.spatial.cKDTree(combined_x_y_arrays)
@@ -195,29 +196,31 @@ sm = cm.SzMap(G, 0)
 # szego object, identified by curve, center, and a bunch of kernel properties
 S = cm.Szego(G, 0)
 # points along the boundary, this is defined by some ratio of 0-1 along the spline
-t =  [ x / len(full_bound_data_xi)for x in conf_map_points]
-# t = np.arange(8)/8.
-pts1 = np.dstack([full_bound_data_xi_w[conf_map_points].ravel(), full_bound_data_yi_w[conf_map_points].ravel()])[0]
-# print(pts1)
-com = np.average(pts1, axis=0)
-# print(com)
+# t =  [ x / len(full_bound_data_xi)for x in conf_map_points]
+t = np.arange(3000)/3000.
 
-# print(pts1)
-
+# domain (worm)
 zs = G(t)
-np.set_printoptions(precision=4, suppress=True, linewidth=15)
-N = 2
-th= 2*np.pi*np.arange(N)/float(N)
-t_2 = S.invtheta(th)
-w = G(t_2)
-c = np.fft.fft(w)/float(N)
-f = lambda z : np.polyval(cm.helpers.flipud(c),z)
+# range (circle)
+zs_2 = np.exp(1.0j * S.theta(t))
+
+# np.set_printoptions(precision=4, suppress=True, linewidth=15)
+# N = 2
+# th= 2*np.pi*np.arange(N)/float(N)
+# t_2 = S.invtheta(th)
+# w = G(t_2)
+# c = np.fft.fft(w)/float(N)
+
+s = aaa(zs, zs_2)
+
+# f = lambda z : np.polyval(cm.helpers.flipud(c),z)
 gd = cm.unitdisk().grid()
 lst = []
 for curve in gd.curves:
-    newcurve = f(curve)
+    newcurve = s(curve)
     # newcurve = sm.applyMap(curve)
     lst.append(newcurve)
+# print(lst)
 gc = cm.GridCurves(lst)
 # gc.plot()
 orig_gc = cm.GridCurves(gd.curves)
@@ -242,14 +245,13 @@ zs_2 = np.exp(1.0j * S.theta(t))
 # plt.plot(sm.applyMap([0 + 1j]).real, sm.applyMap([0 + 1j]).imag, 'go')
 # plt.plot(sm.applyMap([1 + 0j]).real, sm.applyMap([1 + 0j]).imag, 'go')
 # plt.plot(sm.applyMap([0 - 1j]).real, sm.applyMap([0 - 1j]).imag, 'go')
-plt.plot(sm.applyMap([-1 + 0j, 0 - 1j, 1 + 0j, 0 + 1j]).real, sm.applyMap([-1 + 0j, 0 - 1j, 1 + 0j, 0 + 1j]).imag, 'go')
-plt.plot(sm.applyMap([zs_2[20]]).real, sm.applyMap([zs_2[20]]).imag, 'go')
-plt.scatter(f(zs_2).real, f(zs_2).imag, c=t, cmap="cool", s=30)
+# plt.plot(s([-1 + 0j, 0 - 1j, 1 + 0j, 0 + 1j]).real, s([-1 + 0j, 0 - 1j, 1 + 0j, 0 + 1j]).imag, 'go')
+# plt.plot(s([zs_2[20]]).real, s([zs_2[20]]).imag, 'go')
+plt.scatter(s(zs_2).real, s(zs_2).imag, c=t, cmap="cool", s=30)
 # plt.plot(sm.applyMap([1+0j]).real, sm.applyMap([1+0j]).imag, 'ro')
 # plt.plot(sm.applyMap(zs[0]).real, sm.applyMap(zs[0]).imag, 'yo')
 # plt.plot(sm.applyMap([0+0j]).real, sm.applyMap([0+0j]).imag, 'co')
 # plt.plot(com[0], com[1], 'ro')
-print(f(zs_2).real, f(zs_2).imag)
 
 plt.subplot(1,2,2)
 c = cm.Circle(0, 1)
@@ -262,11 +264,11 @@ c.plot()
 orig_gc.plot()
 # plt.plot(0.1, 0.5, 'bo')
 # plt.plot(0.3, 0.2, 'mo')
-plt.plot(0, 1, 'go')
-plt.plot(1, 0, 'go')
-plt.plot(0, -1, 'go')
-plt.plot(-1, 0, 'go')
-plt.plot(zs_2[20].real, zs_2[20].imag, 'go')
+# plt.plot(0, 1, 'go')
+# plt.plot(1, 0, 'go')
+# plt.plot(0, -1, 'go')
+# plt.plot(-1, 0, 'go')
+# plt.plot(zs_2[20].real, zs_2[20].imag, 'go')
 plt.scatter(zs_2.real, zs_2.imag, c=t, cmap="cool", s=30)
 # plt.plot(1, 0, 'ro')
 # plt.plot(zs.real[0], zs.imag[0], 'yo')
