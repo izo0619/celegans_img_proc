@@ -197,12 +197,12 @@ sm = cm.SzMap(G, 0)
 S = cm.Szego(G, 0)
 # points along the boundary, this is defined by some ratio of 0-1 along the spline
 # t =  [ x / len(full_bound_data_xi)for x in conf_map_points]
-t = np.arange(3000)/3000.
+t = np.arange(3000)/3000. #create 3000 points between 0 and 1
 
 # domain (worm)
-zs = G(t)
+zs = G(t) # G is the spline, so grab the t points around the worm
 # range (circle)
-zs_2 = np.exp(1.0j * S.theta(t))
+zs_2 = np.exp(1.0j * S.theta(t)) # their corresponding map on the unit circle
 
 # np.set_printoptions(precision=4, suppress=True, linewidth=15)
 # N = 2
@@ -214,10 +214,10 @@ zs_2 = np.exp(1.0j * S.theta(t))
 s = aaa(zs, zs_2)
 
 # f = lambda z : np.polyval(cm.helpers.flipud(c),z)
-gd = cm.unitdisk().grid()
+gd = cm.unitdisk().grid() # set of inner unit circle curves
 lst = []
 for curve in gd.curves:
-    newcurve = s(curve)
+    newcurve = s(curve) # for each curve, find the corresponding worm curve
     # newcurve = sm.applyMap(curve)
     lst.append(newcurve)
 # print(lst)
