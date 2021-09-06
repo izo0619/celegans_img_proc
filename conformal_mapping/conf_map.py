@@ -197,7 +197,7 @@ sm = cm.SzMap(G, 0)
 S = cm.Szego(G, 0)
 # points along the boundary, this is defined by some ratio of 0-1 along the spline
 # t =  [ x / len(full_bound_data_xi)for x in conf_map_points]
-t = np.arange(3000)/3000. #create 3000 points between 0 and 1
+t = np.arange(5000)/5000. #create 3000 points between 0 and 1
 
 # domain (worm)
 zs = G(t) # G is the spline, so grab the t points around the worm

@@ -38,8 +38,11 @@ from conformalmapping import *
 # ])
 
 # skinny diagonal 
+# G = Splinep.from_complex_list([ 
+#     -3 + 3j, -.1 - .1j, 3 - 3j, .1 + .1j
+# ])
 G = Splinep.from_complex_list([ 
-    -3 + 3j, -1 - 1j, 3 - 3j, 1 + 1j
+    -3 + 3j, .1 + .1j, 3 - 3j, -.1 - .1j
 ])
 # # skinny vertical
 # G = Splinep.from_complex_list([ 
@@ -53,9 +56,12 @@ G = Splinep.from_complex_list([
 # G = Splinep.from_complex_list([ 
 #     -2 + 4j, 0 + 1j, 2 + 4j, 1 + 3.5j, 0 + 2.5j, -1 + 3.5j
 # ])
-G_lst = np.array([ 
-    -2 + 1j, 0 - 2j, 2 + 1j, 1 + 0.5j, 0 - 0.5j, -1 + 0.5j
-])
+# G_lst = np.array([ 
+#     -2 + 1j, 0 - 2j, 2 + 1j, 1 + 0.5j, 0 - 0.5j, -1 + 0.5j
+# ])
+# G = Splinep.from_complex_list([ 
+#     0 + 2j, 0 + 0j, 2 + 0j, 2.5 + 1j, 1 +1j, 0.7 + 1.7j
+# ])
 # G = Splinep.from_complex_list([ 
 #     -1 + 1j, 0 + 1j, 1 + 1j, 1 + 0j, 1 - 1j, 0 - 1j, -1 - 1j, -1 + 0j
 # ])
@@ -85,7 +91,7 @@ zs_2 = np.exp(1.0j * S.theta(t))
 # w = G(t_2)
 # c = np.fft.fft(w)/float(N)
 # f = lambda z : np.polyval(helpers.flipud(c),z)
-s = aaa(zs, zs_2)
+s = aaa(zs, zs_2, tol=1e-7, mmax=500)
 gd = unitdisk().grid()
 lst = []
 for curve in gd.curves:
