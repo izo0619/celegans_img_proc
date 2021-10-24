@@ -95,12 +95,25 @@ plt.subplot(1,2,1)
 #     2 + 1j, 1 + 1j, 1 + 2j, 0 + 2j, 0 +0j, 2 + 0j
 # ])
 # zs_2 = np.array([0.9908 + 0.1356j,0.2582 + 0.9661j, -0.7910 + 0.6119j, -0.8666 + 0.4990j, -0.2582 - 0.9661j, 1.0000 + 0.0000j])
-zs = np.array([1+1j, -1+1j,-1-1j,1-1j])
-zs_2 = np.array([0.0000 + 1.0000j,  -1.0000 + 0.0000j,   0.0000 - 1.0000j,   1.0000 + 0.0000j])
+zs = np.array([1+1j, 0.5 + 1j, 0 + 1j, -0.5 + 1j,
+            -1+1j, -1 + 0.5j, -1 + 0j, -1 - 0.5j,
+            -1-1j, -0.5 - 1j, 0 - 1j, 0.5 - 1j, 
+            1-1j, 1 - 0.5j, 1 + 0j, 1 + 0.5j])
+zs_2 = np.array([0.0000 + 1.0000j,  -0.5 + 0.867j, -0.71 + 0.71j, -0.867 + 0.5j,
+                -1.0000 + 0.0000j,  -0.867 - 0.5j, -0.71 -0.71j, -0.5 -0.867j, 
+                0.0000 - 1.0000j, 0.5 - 0.867j, 0.71 - 0.71j, 0.867 - 0.5j,
+                1.0000 + 0.0000j, 0.867 + 0.5j, 0.71 + 0.71j, 0.5 + 0.867j])
+
+# lines inside square
 line = np.linspace(-1,1,10) + 0.1j
 line2 = np.linspace(-1,1,10) * 1j + 0.1
-line3 = np.linspace(-1,1,num=200) *np.exp(1j*np.pi/3)
-line4 = np.linspace(-1,1,num=200) *np.exp(1j*np.pi/6)
+line6 = np.linspace(1,-1,10) + np.linspace(-1,1,10) * 1j
+line7 = np.linspace(-1,1,10) + np.linspace(-1,1,10) * 1j
+
+# lines inside circle
+line3 = np.linspace(-1,1,10) *np.exp(1j*np.pi/3)
+line4 = np.linspace(-1,1,10) *np.exp(1j*np.pi/6)
+line5 = np.linspace(-1, 1, 10) * np.exp(1j*np.pi/2)
 # np.set_printoptions(precision=4, suppress=True, linewidth=15)
 # N = 512
 # th= 2*np.pi*np.arange(N)/float(N)
@@ -110,7 +123,7 @@ line4 = np.linspace(-1,1,num=200) *np.exp(1j*np.pi/6)
 # f = lambda z : np.polyval(helpers.flipud(c),z)
 # s = aaa(zs, zs_2, tol=1e-7, mmax=500)
 s = aaa(zs, zs_2)
-r = aaa(zs_2, zs)
+r = aaa(zs_2, zs, tol=1e-7)
 gd = unitdisk().grid()
 lst = []
 for curve in gd.curves:
@@ -129,14 +142,32 @@ plt.gca().axis(G.plotbox())
 # ax.set_yticks([]) 
 # plt.show()
 
-# plt.plot(r(zs).real, r(zs).imag, 'r:')
-# plt.plot(r(line).real, r(line).imag, 'b:')
-# plt.plot(r(line2).real, r(line2).imag, 'c:')
+fig, axs = plt.subplots(1, 2, figsize=(9, 3), sharey=True)
+# square to circle
+axs[0].plot(r(zs).real, r(zs).imag, 'r:')
+axs[0].plot(r(line).real, r(line).imag, 'b:')
+axs[0].plot(r(line2).real, r(line2).imag, 'c:')
+axs[0].plot(r(line6).real, r(line6).imag, 'm:')
+axs[0].plot(r(line7).real, r(line7).imag, 'y:')
+# plt.plot(line.real, line.imag, 'b:')
+# plt.plot(line2.real, line2.imag, 'c:')
+# plt.plot(line6.real, line6.imag, 'm:')
+# plt.plot(line7.real, line7.imag, 'y:')
 # plt.show()
 
-plt.plot(s(zs_2).real, s(zs_2).imag, 'r:')
-plt.plot(s(line3).real, s(line3).imag, 'b:')
-plt.plot(s(line4).real, s(line4).imag, 'c:')
+# circle to square
+# axs[1].plot(s(zs_2).real, s(zs_2).imag, 'r-')
+# axs[1].plot(s(line3).real, s(line3).imag, 'b-')
+# axs[1].plot(s(line4).real, s(line4).imag, 'c-')
+# axs[1].plot(s(line5).real, s(line5).imag, 'm-')
+
+# input square lines 
+axs[1].plot(zs.real, zs.imag, 'r:')
+axs[1].plot(line.real, line.imag, 'b:')
+axs[1].plot(line2.real, line2.imag, 'c:')
+axs[1].plot(line6.real, line6.imag, 'm:')
+axs[1].plot(line7.real, line7.imag, 'y:')
+
 plt.show()
 
 # # plt.plot(zs.real, zs.imag, 'ro')

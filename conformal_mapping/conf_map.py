@@ -190,11 +190,11 @@ G = cm.Splinep(full_bound_data_xi_w[conf_map_points],full_bound_data_yi_w[conf_m
 # # # create spline obj for confmap
 # G = cm.Splinep(full_bound_data_xi_w[::-1][conf_map_points],full_bound_data_yi_w[::-1][conf_map_points])
 
-
+conformalCenter = 800 + 400j
 # creates riemann map via szego kernel, not sure what happens here but it just looks like the normal boundary when plotted??
-sm = cm.SzMap(G, 0)
+sm = cm.SzMap(G, conformalCenter)
 # szego object, identified by curve, center, and a bunch of kernel properties
-S = cm.Szego(G, 0)
+S = cm.Szego(G, conformalCenter)
 # points along the boundary, this is defined by some ratio of 0-1 along the spline
 # t =  [ x / len(full_bound_data_xi)for x in conf_map_points]
 t = np.arange(5000)/5000. #create 3000 points between 0 and 1
