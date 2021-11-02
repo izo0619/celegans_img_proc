@@ -181,6 +181,8 @@ raw_img[sorted_points[1], sorted_points[0]] = (255,0,0)
 
 #### original dir ########
 conf_map_points = np.sort(conf_map_points)
+np.savetxt('test1.txt', np.column_stack([full_bound_data_xi_w[conf_map_points], full_bound_data_yi_w[conf_map_points]]))
+print(conf_map_points)
 # # create spline obj for confmap
 G = cm.Splinep(full_bound_data_xi_w[conf_map_points],full_bound_data_yi_w[conf_map_points])
 
@@ -190,14 +192,14 @@ G = cm.Splinep(full_bound_data_xi_w[conf_map_points],full_bound_data_yi_w[conf_m
 # # # create spline obj for confmap
 # G = cm.Splinep(full_bound_data_xi_w[::-1][conf_map_points],full_bound_data_yi_w[::-1][conf_map_points])
 
-conformalCenter = 800 + 400j
+conformalCenter = 200 + 500j
 # creates riemann map via szego kernel, not sure what happens here but it just looks like the normal boundary when plotted??
 sm = cm.SzMap(G, conformalCenter)
 # szego object, identified by curve, center, and a bunch of kernel properties
 S = cm.Szego(G, conformalCenter)
 # points along the boundary, this is defined by some ratio of 0-1 along the spline
 # t =  [ x / len(full_bound_data_xi)for x in conf_map_points]
-t = np.arange(5000)/5000. #create 3000 points between 0 and 1
+t = np.arange(1000)/1000. #create 3000 points between 0 and 1
 
 # domain (worm)
 zs = G(t) # G is the spline, so grab the t points around the worm
@@ -238,6 +240,7 @@ gc.plot()
 G.plot()
 zs = G(t)
 zs_2 = np.exp(1.0j * S.theta(t))
+plt.plot(conformalCenter.real, conformalCenter.imag, 'ro')
 # plt.gca().invert_yaxis()
 # plt.scatter(w.real, w.imag, c=t_2, cmap="cool", s=30)
 # plt.plot(sm.applyMap([0.1 + 0.5j]).real, sm.applyMap([0.1 + 0.5j]).imag, 'bo')

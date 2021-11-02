@@ -26,7 +26,7 @@ L_pts = ((np.concatenate((line_a, line_b, line_c, line_d, line_e, line_f))))
 L_spline = Splinep.from_complex_list(L_pts)
 
 # conformal mapping
-conformalCenter = 0.5 + 1j
+conformalCenter = 0.7 + 0.7j
 sm = SzMap(L_spline, conformalCenter)
 S = Szego(L_spline, conformalCenter)
 # lay down 3000 evenly spaced points along the spline
