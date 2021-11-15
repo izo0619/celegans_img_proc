@@ -13,17 +13,31 @@ from conformalmapping import *
 
 # create L shape
 num_pts = 100
-line_a = 0 + np.linspace(2,0,num_pts, endpoint=False) * 1j
-line_b = np.linspace(0,2,num_pts, endpoint=False) + 0j
-line_c = 2 + np.linspace(0,1,num_pts, endpoint=False) * 1j
-line_d = np.linspace(2,1,num_pts, endpoint=False) + 1j
-line_e = 1 + np.linspace(1,2,num_pts, endpoint=False) * 1j
-line_f = np.linspace(1,0,num_pts) + 2j
+length = 8
+line_a = 0 + np.linspace(length,0,num_pts, endpoint=False) * 1j
+line_b = np.linspace(0,length,num_pts, endpoint=False) + 0j
+line_c = length + np.linspace(0,1,num_pts, endpoint=False) * 1j
+line_d = np.linspace(length,1,num_pts, endpoint=False) + 1j
+line_e = 1 + np.linspace(1,length,num_pts, endpoint=False) * 1j
+line_f = np.linspace(1,0,num_pts) + length*1j
 
 # concatenate all edges of the L
 L_pts = ((np.concatenate((line_a, line_b, line_c, line_d, line_e, line_f))))
 # create spline 
 L_spline = Splinep.from_complex_list(L_pts)
+
+# # create square shape
+# num_pts = 100
+# length = 64
+# line_a = -length + np.linspace(1,-1,num_pts, endpoint=False) * 1j
+# line_b = np.linspace(-length,length,num_pts, endpoint=False) + -1j
+# line_c = length + np.linspace(-1,1,num_pts, endpoint=False) * 1j
+# line_d = np.linspace(length,-length,num_pts, endpoint=False) + 1j
+
+# # concatenate all edges of the L
+# L_pts = ((np.concatenate((line_a, line_b, line_c, line_d))))
+# # create spline 
+# L_spline = Splinep.from_complex_list(L_pts)
 
 # conformal mapping
 conformalCenter = 0.7 + 0.7j
