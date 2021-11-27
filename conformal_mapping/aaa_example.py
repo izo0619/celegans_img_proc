@@ -12,14 +12,14 @@ from conformalmapping import *
 ### does boundary map have origin? how to adjust origin?
 
 # create L shape
-num_pts = 100
-length = 8
-line_a = 0 + np.linspace(length,0,num_pts, endpoint=False) * 1j
-line_b = np.linspace(0,length,num_pts, endpoint=False) + 0j
-line_c = length + np.linspace(0,1,num_pts, endpoint=False) * 1j
-line_d = np.linspace(length,1,num_pts, endpoint=False) + 1j
-line_e = 1 + np.linspace(1,length,num_pts, endpoint=False) * 1j
-line_f = np.linspace(1,0,num_pts) + length*1j
+# num_pts = 100
+# length = 8
+# line_a = 0 + np.linspace(length,0,num_pts, endpoint=False) * 1j
+# line_b = np.linspace(0,length,num_pts, endpoint=False) + 0j
+# line_c = length + np.linspace(0,1,num_pts, endpoint=False) * 1j
+# line_d = np.linspace(length,1,num_pts, endpoint=False) + 1j
+# line_e = 1 + np.linspace(1,length,num_pts, endpoint=False) * 1j
+# line_f = np.linspace(1,0,num_pts) + length*1j
 
 # concatenate all edges of the L
 L_pts = ((np.concatenate((line_a, line_b, line_c, line_d, line_e, line_f))))
