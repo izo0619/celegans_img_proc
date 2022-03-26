@@ -85,11 +85,10 @@ def complex_dist(pt1, pt2):
 # plt.show()
 
 #### global gridlines
-def calculate_global_error(num_boxes):
+def calculate_global_error(num_boxes, res):
     length = 200 # length of whole object - long way
     width = 10 # width of whole object - short way
     num_pts = 5 # density of border pts
-    res = 2
     # num_boxes = 10
     box_length = length/num_boxes
     all_squares = np.array([])
@@ -104,9 +103,9 @@ def calculate_global_error(num_boxes):
 
     # create gridlines
     glines = []
-    for i in np.linspace(0,length, int(length/res) + 1):
-        for j in np.linspace(-width/2,width/2, int(width/res + 1)):
-            coord = i + j*1j
+    for j in np.linspace(-width/2,width/2, int(width/res), endpoint=False):
+        for i in np.linspace(0,length, int(length/res), endpoint=False):
+            coord = (i+(res/2)) + (j+(res/2))*1j
             glines.append(coord)
             # np.append(glines, coord)
     glines = np.array(glines)
@@ -123,7 +122,7 @@ def calculate_global_error(num_boxes):
         L_spline = Splinep.from_complex_list(L_pts)
 
         conformalCenter = box_length*(i+0.5) + 0j
-        plt.plot(conformalCenter.real, conformalCenter.imag, marker='x', color='gray')
+        #plt.plot(conformalCenter.real, conformalCenter.imag, marker='x', color='gray')
         sm = SzMap(L_spline, conformalCenter)
         S = Szego(L_spline, conformalCenter)
         t = np.arange(1000)/1000.
@@ -139,29 +138,52 @@ def calculate_global_error(num_boxes):
 
     glines_remap = []
     global_error = 0
+    error_offset = 0
+    all_errors = []
     for pt in glines:
         box_num = int(pt.real // box_length)
+        # last edge scenario
         if box_num == num_boxes: box_num -= 1
+        # double map scenario
+        elif pt.real % box_length == 0 and box_num != 0:
+            error_offset -= 1
+            break
+            # new_pt = forward_maps[box_num-1](pt) # forward map
+            # new_pt = reverse_maps[box_num-1](new_pt) # reverse map
+            # glines_remap.append(new_pt)
+            # global_error += complex_dist(pt, new_pt)
         new_pt = forward_maps[box_num](pt) # forward map
         new_pt = reverse_maps[box_num](new_pt) # reverse map
         glines_remap.append(new_pt)
+        all_errors.append(complex_dist(pt, new_pt))
         global_error += complex_dist(pt, new_pt)
 
     glines_remap = np.array(glines_remap)
-    global_error = global_error / len(glines)
+    global_error = global_error / (len(glines) + error_offset)
 
     ratio = length / (width * num_boxes)
-    # file.write(str(ratio) + "," + str(global_error))
-    # file.write("\n")
-    plt.plot(all_squares.real, all_squares.imag, color="gray", label="Boundary lines + conformal centers")
-    plt.scatter(glines.real, glines.imag, c='red', marker="D", label="Original gridlines")
-    plt.scatter(glines_remap.real, glines_remap.imag, c= 'green', marker="x", label="Remapped gridlines")
-    plt.legend()
-    plt.show()
+    name = "X:Y ratio of " + str(ratio) + " at " + str(res) + " resolution"
+    file.write(str(ratio) + "," + str(global_error))
+    file.write("\n")
 
-# to_run = [1,2,4,10,20,40,100, 200, 400]
-# file = open('global_error_results.txt', 'w')
-# for nb in to_run:
-#     calculate_global_error(nb)
-# file.close()
-calculate_global_error(10)
+    # plt.scatter(glines.real, glines.imag, c='red', marker="D", label="Original gridlines")
+    fig, axs = plt.subplots(2, 1, figsize=(16,9))
+    axs[0].plot(all_squares.real, all_squares.imag, color="gray", label="Boundary lines")
+    # axs[0].scatter(glines.real, glines.imag, c='red', marker="D", label="Original gridlines")
+    scatter = axs[0].scatter(glines_remap.real, glines_remap.imag, c=all_errors, cmap="spring", label="Remapped gridlines")
+    plt.colorbar(scatter, format='%.2e', ax=axs[0])
+    axs[0].legend(loc="upper right")
+    axs[0].set_title(name)
+    
+    axs[1].hist(all_errors)
+    axs[1].set_xlabel('error')
+    axs[1].set_ylabel('frequency')
+    axs[1].ticklabel_format(axis='x', style='sci', scilimits=(0,0))
+    fig.tight_layout()
+    plt.savefig("plots/" + str(ratio) + "_ratio_" + str(res) + "_res" + ".png", dpi=200)
+
+to_run = [1,2,4,10,20,40,100, 200, 400]
+file = open('global_error_results.txt', 'w')
+for nb in to_run:
+    calculate_global_error(nb, 1)
+file.close()
