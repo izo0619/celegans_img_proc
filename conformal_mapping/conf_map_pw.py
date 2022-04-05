@@ -1,3 +1,4 @@
+from tracemalloc import start
 import matplotlib.pyplot as plt
 from skimage import segmentation, color
 from skimage.io import imread
@@ -151,21 +152,37 @@ full_bound_data_yi_w_int = full_bound_data_yi_w.astype(int)
 top_2_curve = np.sort(top_2_curve)
 middle_pts_x = [full_bound_data_xi_w[top_2_curve[1]]]
 middle_pts_y = [full_bound_data_yi_w[top_2_curve[1]]]
+res = 60
+spacing_1 = round((top_2_curve[1]-top_2_curve[0])/res)
+spacing_2 = round((top_2_curve[0] + (len(full_bound_data_xi) - top_2_curve[1]))/res)
+spacing_level = np.linspace(1,res,res)
+piece_widths = []
+piece_lengths = []
 middle_dist = [0]
-spacing_1 = round((top_2_curve[1]-top_2_curve[0])/36)
-spacing_2 = round((top_2_curve[0] + (len(full_bound_data_xi) - top_2_curve[1]))/36)
-spacing_level = np.linspace(1,36,35)
 for i in range(len(spacing_level)):
     pt1 = (round(top_2_curve[1] - (spacing_1 * spacing_level[i])))
     pt2 = (round(top_2_curve[1] + (spacing_2 * spacing_level[i])) % len(full_bound_data_xi))
     xavg = (full_bound_data_xi_w[pt1] + full_bound_data_xi_w[pt2]) / 2
     yavg = (full_bound_data_yi_w[pt1] + full_bound_data_yi_w[pt2]) / 2
-    middle_dist.append(math.dist([middle_pts_x[-1], middle_pts_y[-1]], [xavg, yavg]) + middle_dist[-1])
+    middle_dist.append(math.dist([middle_pts_x[-1], middle_pts_y[-1]], [xavg, yavg]))
     middle_pts_x.append(xavg)
     middle_pts_y.append(yavg)
-middle_spline = csaps(range(len(middle_pts_x)), [middle_pts_x, middle_pts_y], range(len(middle_pts_x)), smooth=0.85)
+
+    # if this is a selected piece cut, find the width and height
+    if ((i+1) % (len(spacing_level)/5) == 0) and i != 0 and i != len(spacing_level)-1:
+        piece_widths.append(math.dist([full_bound_data_xi_w[pt1],full_bound_data_yi_w[pt1]],
+        [full_bound_data_xi_w[pt2], full_bound_data_yi_w[pt2]]))
+
+        cm_length = 0
+        for j in range(int(len(spacing_level)/5)):
+            cm_length += middle_dist[i+1-j]
+        piece_lengths.append(cm_length)
+print(piece_widths)
+print(piece_lengths)
 
 # cut into pieces
+# start_idx = 1
+# coeffs = np.polyfit(middle_spline[start_idx - 0.5])
 
 fig, (ax1, ax2) = plt.subplots(1,2)
 ax1.imshow(raw_img, cmap=plt.cm.gray)
@@ -178,8 +195,8 @@ ax2.set(xlim=(0, len(orig_img)), ylim=(0, len(orig_img)))
 ax2.invert_yaxis()
 # ax2.plot(sorted_points[0], sorted_points[1], '-', label='sorted points')
 ax2.plot(full_bound_data_xi_w, full_bound_data_yi_w, '-')
-# ax2.plot(middle_pts_x, middle_pts_y, '-')
-ax2.plot(middle_spline[0], middle_spline[1], '-o')
+ax2.plot(middle_pts_x, middle_pts_y, '-o')
+# ax2.plot(middle_spline[0], middle_spline[1], '-o')
 # ax2.plot(full_bound_data_xi_w_int[top_2_curve[0]:top_2_curve[1]], full_bound_data_yi_w_int[top_2_curve[0]:top_2_curve[1]], 'o')
 # ax2.plot(full_bound_data_xi_w_int[top_2_curve[1]:top_2_curve[0]], full_bound_data_yi_w_int[top_2_curve[1]:top_2_curve[0]], 'o')
 ax2.legend()
