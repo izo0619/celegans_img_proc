@@ -1,3 +1,4 @@
+from curses import raw
 from tracemalloc import start
 import matplotlib.pyplot as plt
 from skimage import segmentation, color
@@ -16,6 +17,9 @@ from diskmap import diskmap
 import cv2
 from aaapy.aaa import aaa
 import math
+import pandas as pd
+from matplotlib.path import Path
+import numpy.ma as ma
 
 def do_kdtree(combined_x_y_arrays,points):
     mytree = scipy.spatial.cKDTree(combined_x_y_arrays)
@@ -30,7 +34,6 @@ orig_img = imread('./segmentation_correction/h51/h51_sample_seg.tif')
 raw_img = imread('./segmentation_correction/h51/h51_sample_seg_orig.tif')
 # orig_img = imread('./segmentation_correction/h44/h44_sample_seg.tif')
 orig_img = img_as_uint(orig_img)
-
 # close any areas smaller than 90 px
 area_closed = area_closing(orig_img, 90)
 # opening operation
@@ -178,31 +181,42 @@ for i in range(len(spacing_level)):
         pieces.append(np.concatenate((side_1, side_2[::-1])))
         side_1 = [pt1]
         side_2 = [pt2]
-        # piece_widths.append(math.dist([full_bound_data_xi_w[pt1],full_bound_data_yi_w[pt1]],
-        # [full_bound_data_xi_w[pt2], full_bound_data_yi_w[pt2]]))
 
-        # cm_length = 0
-        # for j in range(int(len(spacing_level)/5)):
-        #     cm_length += middle_dist[i+1-j]
-        # piece_lengths.append(cm_length)
-# print(piece_widths)
-# print(piece_lengths)
-print(pieces)
+# find all points inside worm boundary
+x, y = np.meshgrid(np.arange(len(raw_img)), np.arange(len(raw_img))) # make a canvas with coordinates
+x, y = x.flatten(), y.flatten()
+points = np.vstack((x,y)).T 
+tup_bounds = tuple(zip(full_bound_data_xi_w, full_bound_data_yi_w))
+p = Path(tup_bounds) # make a polygon
+grid = p.contains_points(points)
+mask = grid.reshape(len(raw_img),len(raw_img)) # now you have a mask with points inside a polygon
+raw_img_worm = ma.masked_array(raw_img, mask=np.invert(mask))
+
+# find all points in each piece boundary
+raw_img_pieces = []
+for i in range(len(pieces)):
+    x, y = np.meshgrid(np.arange(len(raw_img)), np.arange(len(raw_img))) # make a canvas with coordinates
+    x, y = x.flatten(), y.flatten()
+    points = np.vstack((x,y)).T 
+    tup_bounds = tuple(zip(full_bound_data_xi_w_int[pieces[i]], full_bound_data_yi_w_int[pieces[i]]))
+    p = Path(tup_bounds) # make a polygon
+    grid = p.contains_points(points)
+    mask = grid.reshape(len(raw_img),len(raw_img)) # now you have a mask with points inside a polygon
+    raw_img_pieces.append(ma.masked_array(raw_img, mask=np.invert(mask)))
+
 
 fig, (ax1, ax2) = plt.subplots(1,2)
 ax1.imshow(raw_img, cmap=plt.cm.gray)
 ax1.axis('off')
 ax1.plot(full_bound_data_xi_w, full_bound_data_yi_w, ':o')
 
-# ax2.imshow(final, cmap=plt.cm.gray)
-# ax2.axis('off')
+
 ax2.set(xlim=(0, len(orig_img)), ylim=(0, len(orig_img)))
 ax2.invert_yaxis()
-# ax2.plot(sorted_points[0], sorted_points[1], '-', label='sorted points')
+ax2.imshow(raw_img_pieces[0], cmap=plt.cm.gray)
 ax2.plot(full_bound_data_xi_w, full_bound_data_yi_w, '-')
-ax2.plot(middle_pts_x, middle_pts_y, '-o')
-# ax2.plot(middle_spline[0], middle_spline[1], '-o')
-# ax2.plot(full_bound_data_xi_w_int[top_2_curve[0]:top_2_curve[1]], full_bound_data_yi_w_int[top_2_curve[0]:top_2_curve[1]], 'o')
-# ax2.plot(full_bound_data_xi_w_int[top_2_curve[1]:top_2_curve[0]], full_bound_data_yi_w_int[top_2_curve[1]:top_2_curve[0]], 'o')
+ax2.plot(middle_pts_x, middle_pts_y, '-')
+for i in range(len(pieces)):
+    ax2.plot(full_bound_data_xi_w_int[pieces[i]], full_bound_data_yi_w_int[pieces[i]])
 ax2.legend()
 plt.show()
