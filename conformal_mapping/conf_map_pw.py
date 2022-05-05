@@ -156,11 +156,12 @@ res = 60 # how many dots to put down each side
 spacing_1 = round((top_2_curve[1]-top_2_curve[0])/res)
 spacing_2 = round((top_2_curve[0] + (len(full_bound_data_xi) - top_2_curve[1]))/res)
 spacing_level = np.linspace(1,res,res)
-piece_widths = [] # width of each piece of worm
-piece_lengths = [] # length of each piece of worm
+# piece_widths = [] # width of each piece of worm
+# piece_lengths = [] # length of each piece of worm
 middle_dist = [0] # array of distances between each middle point
 side_1 = [] # array for holding each piece pts on side 1
 side_2 = [] # array for holding each piece pts on side 2
+pieces = []
 for i in range(len(spacing_level)):
     pt1 = (round(top_2_curve[1] - (spacing_1 * spacing_level[i])))
     pt2 = (round(top_2_curve[1] + (spacing_2 * spacing_level[i])) % len(full_bound_data_xi))
@@ -174,15 +175,19 @@ for i in range(len(spacing_level)):
     side_2.append(pt2)
     # if this is a selected piece cut, find the width and height
     if ((i+1) % (len(spacing_level)/5) == 0) and i != 0 and i != len(spacing_level)-1:
-        piece_widths.append(math.dist([full_bound_data_xi_w[pt1],full_bound_data_yi_w[pt1]],
-        [full_bound_data_xi_w[pt2], full_bound_data_yi_w[pt2]]))
+        pieces.append(np.concatenate((side_1, side_2[::-1])))
+        side_1 = [pt1]
+        side_2 = [pt2]
+        # piece_widths.append(math.dist([full_bound_data_xi_w[pt1],full_bound_data_yi_w[pt1]],
+        # [full_bound_data_xi_w[pt2], full_bound_data_yi_w[pt2]]))
 
-        cm_length = 0
-        for j in range(int(len(spacing_level)/5)):
-            cm_length += middle_dist[i+1-j]
-        piece_lengths.append(cm_length)
-print(piece_widths)
-print(piece_lengths)
+        # cm_length = 0
+        # for j in range(int(len(spacing_level)/5)):
+        #     cm_length += middle_dist[i+1-j]
+        # piece_lengths.append(cm_length)
+# print(piece_widths)
+# print(piece_lengths)
+print(pieces)
 
 fig, (ax1, ax2) = plt.subplots(1,2)
 ax1.imshow(raw_img, cmap=plt.cm.gray)
