@@ -3,6 +3,7 @@ from tracemalloc import start
 import matplotlib.pyplot as plt
 from skimage import segmentation, color
 from skimage.io import imread
+from conformalmapping import *
 from skimage.morphology import (opening, remove_small_objects, area_closing, closing)
 from skimage.morphology import disk
 from skimage.util.dtype import img_as_uint
@@ -20,6 +21,9 @@ import math
 import pandas as pd
 from matplotlib.path import Path
 import numpy.ma as ma
+import standard_worm
+from scipy.io import savemat
+
 
 def do_kdtree(combined_x_y_arrays,points):
     mytree = scipy.spatial.cKDTree(combined_x_y_arrays)
@@ -177,11 +181,72 @@ for i in range(len(spacing_level)):
     side_1.append(pt1)
     side_2.append(pt2)
     # if this is a selected piece cut, find the width and height
-    if ((i+1) % (len(spacing_level)/5) == 0) and i != 0 and i != len(spacing_level)-1:
-        pieces.append(np.concatenate((side_1, side_2[::-1])))
+    if ((i+1) % (len(spacing_level)/6) == 0) and i != 0:
+        pieces.append(np.concatenate((side_2, side_1[::-1])))
         side_1 = [pt1]
         side_2 = [pt2]
+# mapping stage 1: worm to circle
+# mapping stage 2: circle to ideal worm
+std_worms = standard_worm.gen()
+stage_1_maps = []
+stage_2_maps = []
+stage_1_circles= []
+fig, (ax1, ax2, ax3, ax4) = plt.subplots(1,4)
 
+# piece = np.empty(np.shape(full_bound_data_xi_w_int[pieces[4]]), dtype=np.complex128); 
+# piece.real = full_bound_data_xi_w_int[pieces[4]]
+# piece.imag = full_bound_data_yi_w_int[pieces[4]]
+# p_spline = Splinep.from_complex_list(piece)
+# conformalCenter = np.mean(piece)
+# t = np.arange(1000)/1000.
+# print(t)
+# p_zs_orig = p_spline(t)
+# ax3.plot(p_zs_orig.real, p_zs_orig.imag)
+# print(p_zs_orig)
+# sm = SzMap(p_spline, conformalCenter)
+# S = Szego(p_spline, conformalCenter)
+
+# p_zs_circle = np.exp(1.0j * S.theta(t))
+# ax3.plot(piece.real, piece.imag)
+complex_piece = []
+for i in range(len(pieces)):
+    pieces[i] = pieces[i][::-1]
+    piece = np.empty(np.shape(full_bound_data_xi_w_int[pieces[i]]), dtype=np.complex128); 
+    piece.real = full_bound_data_xi_w_int[pieces[i]]
+    piece.imag = full_bound_data_yi_w_int[pieces[i]]
+    conformalCenter = np.mean(piece)
+    # piece = piece - conformalCenter
+    complex_piece.append(piece)
+    p_spline = Splinep.from_complex_list(piece)
+    # std_worm = Splinep.from_complex_list(std_worms[i])
+    sm = SzMap(p_spline)
+    S = Szego(p_spline)
+    t = np.arange(1000)/1000.
+    p_zs_orig = p_spline(t)
+    p_zs_circle = np.exp(1.0j * S.theta(t))
+    ax3.plot(piece.real, piece.imag)
+    print("conformal center:")
+    print(conformalCenter)
+    ax3.scatter([conformalCenter.real], [conformalCenter.imag])
+    mat_dict = {'x':piece.real, 'y':piece.imag}
+    # ax4.plot(p_zs_circle.real, p_zs_circle.imag)
+    # forward map: shape -> circle 
+    try:
+        r = aaa(p_zs_circle, p_zs_orig, tol=1e-7)
+        stage_1_maps.append(r)
+        # s = aaa(std_worm, p_zs_circle)
+        # stage_2_maps.append(s)
+        print("here")
+        ax4.plot(r(pieces[i]).real, r(pieces[i]).imag)
+    except:
+        print(i)
+        print('kill myself')
+    ax4.legend(["0", "1", "2", "3"])
+    # reverse map: circle -> shape 
+    # print(std_worm.dtype)
+    # s = aaa(std_worm, p_zs_circle)
+    # stage_2_maps.append(s)
+savemat('wormpiece6_' + str(i) + '.mat', {'cpiece': complex_piece})
 # find all points inside worm boundary
 x, y = np.meshgrid(np.arange(len(raw_img)), np.arange(len(raw_img))) # make a canvas with coordinates
 x, y = x.flatten(), y.flatten()
@@ -204,8 +269,7 @@ for i in range(len(pieces)):
     mask = grid.reshape(len(raw_img),len(raw_img)) # now you have a mask with points inside a polygon
     raw_img_pieces.append(ma.masked_array(raw_img, mask=np.invert(mask)))
 
-
-fig, (ax1, ax2) = plt.subplots(1,2)
+# fig, (ax1, ax2, ax3, ax4) = plt.subplots(1,4)
 ax1.imshow(raw_img, cmap=plt.cm.gray)
 ax1.axis('off')
 ax1.plot(full_bound_data_xi_w, full_bound_data_yi_w, ':o')
@@ -214,9 +278,16 @@ ax1.plot(full_bound_data_xi_w, full_bound_data_yi_w, ':o')
 ax2.set(xlim=(0, len(orig_img)), ylim=(0, len(orig_img)))
 ax2.invert_yaxis()
 ax2.imshow(raw_img_pieces[0], cmap=plt.cm.gray)
-ax2.plot(full_bound_data_xi_w, full_bound_data_yi_w, '-')
-ax2.plot(middle_pts_x, middle_pts_y, '-')
+# ax2.plot(full_bound_data_xi_w, full_bound_data_yi_w, '-')
+# ax2.plot(middle_pts_x, middle_pts_y, '-')
 for i in range(len(pieces)):
     ax2.plot(full_bound_data_xi_w_int[pieces[i]], full_bound_data_yi_w_int[pieces[i]])
-ax2.legend()
+    print(full_bound_data_xi_w_int[pieces[i]], full_bound_data_yi_w_int[pieces[i]])
+
+
+# for i in range(len(stage_1_maps)):
+#     # print(stage_1_maps[i](pieces[i]))
+#     print(stage_1_maps)
+#     ax3.plot(stage_1_maps[i](pieces[i]).real, stage_1_maps[i](pieces[i]).imag, ':o')
+
 plt.show()

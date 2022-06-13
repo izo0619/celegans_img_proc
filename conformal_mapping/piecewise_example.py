@@ -92,6 +92,7 @@ def calculate_global_error(num_boxes, res):
     # num_boxes = 10
     box_length = length/num_boxes
     all_squares = np.array([])
+    all_squares2 =[]
 
     # create general boundary
     line_a = np.linspace(width/2,-width/2,num_pts, endpoint=False) * 1j
@@ -135,11 +136,14 @@ def calculate_global_error(num_boxes, res):
         reverse_maps.append(s)
         forward_maps.append(r)
         all_squares = np.concatenate((all_squares, L_pts))
+        all_squares2.append(L_pts)
 
     glines_remap = []
     global_error = 0
     error_offset = 0
     all_errors = []
+    test_x=[]
+    test_y=[]
     for pt in glines:
         box_num = int(pt.real // box_length)
         # last edge scenario
@@ -153,6 +157,8 @@ def calculate_global_error(num_boxes, res):
             # glines_remap.append(new_pt)
             # global_error += complex_dist(pt, new_pt)
         new_pt = forward_maps[box_num](pt) # forward map
+        test_x.append(new_pt.real)
+        test_y.append(new_pt.imag)
         new_pt = reverse_maps[box_num](new_pt) # reverse map
         glines_remap.append(new_pt)
         all_errors.append(complex_dist(pt, new_pt))
@@ -163,11 +169,11 @@ def calculate_global_error(num_boxes, res):
 
     ratio = length / (width * num_boxes)
     name = "X:Y ratio of " + str(ratio) + " at " + str(res) + " resolution"
-    file.write(str(ratio) + "," + str(global_error))
-    file.write("\n")
+    # file.write(str(ratio) + "," + str(global_error))
+    # file.write("\n")
 
     # plt.scatter(glines.real, glines.imag, c='red', marker="D", label="Original gridlines")
-    fig, axs = plt.subplots(2, 1, figsize=(16,9))
+    fig, axs = plt.subplots(3, 1, figsize=(16,9))
     axs[0].plot(all_squares.real, all_squares.imag, color="gray", label="Boundary lines")
     # axs[0].scatter(glines.real, glines.imag, c='red', marker="D", label="Original gridlines")
     scatter = axs[0].scatter(glines_remap.real, glines_remap.imag, c=all_errors, cmap="spring", label="Remapped gridlines")
@@ -180,10 +186,16 @@ def calculate_global_error(num_boxes, res):
     axs[1].set_ylabel('frequency')
     axs[1].ticklabel_format(axis='x', style='sci', scilimits=(0,0))
     fig.tight_layout()
-    plt.savefig("plots/" + str(ratio) + "_ratio_" + str(res) + "_res" + ".png", dpi=200)
+    for i in range(len(all_squares2)):
+        pain = forward_maps[i](all_squares2[i])
+        axs[2].plot(pain.real, pain.imag)
+    plt.show()
+    # plt.savefig("plots/" + str(ratio) + "_ratio_" + str(res) + "_res" + ".png", dpi=200)
 
-to_run = [1,2,4,10,20,40,100, 200, 400]
-file = open('global_error_results.txt', 'w')
-for nb in to_run:
-    calculate_global_error(nb, 1)
-file.close()
+# to_run = [1,2,4,10,20,40,100, 200, 400]
+# file = open('global_error_results.txt', 'w')
+# for nb in to_run:
+#     calculate_global_error(nb, 1)
+# file.close()
+
+calculate_global_error(4, 1)
