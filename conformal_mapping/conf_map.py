@@ -156,6 +156,7 @@ for i in range(10):
 
 full_bound_data_w = csaps(range(len(full_bound_data_xi)), [sorted_points[0], sorted_points[1]], range(len(full_bound_data_xi)), weights=weights, smooth=0.85)
 full_bound_data_s = CubicSmoothingSpline(range(len(full_bound_data_xi)), [sorted_points[0], sorted_points[1]], weights=weights, smooth=0.85).spline
+np.save('test.npy', full_bound_data_w)
 full_bound_data_xi_w = full_bound_data_w[0]
 full_bound_data_yi_w = full_bound_data_w[1]
 full_bound_data_xi_w_int = full_bound_data_xi_w.astype(int)
@@ -163,6 +164,7 @@ full_bound_data_yi_w_int = full_bound_data_yi_w.astype(int)
 
 # find 20 points around worm
 top_2_curve = np.sort(top_2_curve)
+print(top_2_curve)
 conf_map_points = [top_2_curve[0]]
 spacing_1 = round((top_2_curve[1]-top_2_curve[0])/36)
 spacing_2 = round((top_2_curve[0] + (len(full_bound_data_xi) - top_2_curve[1]))/36)
