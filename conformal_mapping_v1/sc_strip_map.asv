@@ -10,10 +10,10 @@ function interior_mapped = sc_strip_map(input, index, interior)
 %      scatter(real(interior_mapped), imag(interior_mapped));
 %      savefig('interior_canonical.fig');
 %      hold on
-%      
-%      hold on
-%      scatter(real(interior), imag(interior), 'filled');
-%      plot(input, LineStyle="-", Color='green');
-%      scatter(real(interior(indices)), imag(interior(indices)), MarkerFaceColor='red');
-%      savefig('bounded_input.fig');
+     scatter(real(interior(indices)), imag(interior(indices)), MarkerFaceColor='red');
+     figure
+     plot(input, LineStyle="-", Color='green');
+     hold on
+     plot(input(real(index)), MarkerFaceColor="red")
+     savefig('input.fig');
 end

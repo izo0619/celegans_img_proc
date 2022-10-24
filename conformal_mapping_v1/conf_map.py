@@ -12,7 +12,7 @@ import numpy as np
 from csaps import csaps, CubicSmoothingSpline
 import scipy
 from matplotlib.path import Path
-import numpy.ma as ma
+from scipy.interpolate import griddata
 
 def do_kdtree(combined_x_y_arrays,points):
     mytree = scipy.spatial.cKDTree(combined_x_y_arrays)
@@ -145,12 +145,13 @@ full_bound_data_yi_w = full_bound_data_w[1]
 full_bound_data_xi_w_int = full_bound_data_xi_w.astype(int)
 full_bound_data_yi_w_int = full_bound_data_yi_w.astype(int)
 
-# find 26 points around worm
+# find 48 points around worm
 top_2_curve = np.sort(top_2_curve)
 conf_map_points = [top_2_curve[0]]
 spacing_1 = round((top_2_curve[1]-top_2_curve[0])/36)
 spacing_2 = round((top_2_curve[0] + (len(full_bound_data_xi) - top_2_curve[1]))/36)
-spacing_level = [0.5,2,3,8,12,16,20,24,28,33,34,35.5]
+# spacing_level = [0.5,2,3,8,12,16,20,24,28,33,34,35.5]
+spacing_level = [0.5,1,2,3,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,33,34,35,35.5]
 for i in range(len(spacing_level)):
     conf_map_points.append(round(top_2_curve[0] + (spacing_1 * spacing_level[i])))
 conf_map_points.append(top_2_curve[1])
@@ -161,31 +162,56 @@ for i in range(len(spacing_level)):
 x, y = np.meshgrid(np.arange(len(raw_img[0])), np.arange(len(raw_img))) # make a canvas with coordinates
 x, y = x.flatten(), y.flatten()
 points = np.vstack((x,y)).T 
-tup_bounds = tuple(zip(full_bound_data_xi_w_int, full_bound_data_yi_w_int))
+# tup_bounds = tuple(zip(full_bound_data_xi_w_int, full_bound_data_yi_w_int))
+tup_bounds = tuple(zip(full_bound_data_xi_w[conf_map_points], full_bound_data_yi_w[conf_map_points]))
 p = Path(tup_bounds) # make a polygon
 grid = p.contains_points(points)
 mask = grid.reshape(len(raw_img[0]),len(raw_img)) # mask with points inside a polygon
 mask_points = np.argwhere(mask)
 interior_points = mask_points[:,1] + 1j*mask_points[:,0]
-plt.scatter(interior_points.real[::10], interior_points.imag[::10])
-plt.show()
+interior_points_idx = np.argwhere(grid)
+colors = raw_img.flatten()[interior_points_idx].flatten()[::5]
+
+# print(interior_points_idx)
+# print(len(raw_img[0])**2)
 
 # feed into matlab ** MUST BE COUNTERCLOCKWISE DIRECTION **
 ## reverse pts before feed
 full_worm_ccw_ext = np.array([full_bound_data_xi_w[conf_map_points][::-1], full_bound_data_yi_w[conf_map_points][::-1]])
-full_worm_ends_ccw = [1,14]
+full_worm_ends_ccw = [1,24]
 # plt.scatter(full_worm_ccw_ext[0], full_worm_ccw_ext[1], c=range(len(full_worm_ccw_ext[0])), cmap="cool")
-# for idx in full_worm_ends_ccw:
-#     plt.scatter(full_worm_ccw_ext[0][idx], full_worm_ccw_ext[1][idx])
-# plt.show()
 full_worm_ccw_ext = full_worm_ccw_ext[0] + 1j*full_worm_ccw_ext[1]
-print(full_worm_ccw_ext.dtype)
-# print(full_worm_ccw_ext)
 
 eng = matlab.engine.start_matlab()
 input_arr = matlab.double(eng.cell2mat(full_worm_ccw_ext.tolist()), is_complex=True)
 input_bounds = matlab.double(eng.cell2mat(full_worm_ends_ccw), is_complex=True)
-input_interior = matlab.double(eng.cell2mat(interior_points[::10].tolist()), is_complex=True)
+input_interior = matlab.double(eng.cell2mat(interior_points.tolist()[::5]), is_complex=True)
 print("begin matlab function...")
 result = eng.sc_strip_map(input_arr, input_bounds, input_interior)
+result = np.asarray(result)
+
+# set up output to become list of lists
+result = [list(i) for i in zip(result[0].real, result[0].imag)]
+#generate grid data using mgrid
+grid_x,grid_y = np.mgrid[0:25:50000j, 0:1:2000j]
+# grid_a = griddata(result, colors, (grid_x, grid_y), method='nearest')
+# grid_b = griddata(result, colors, (grid_x, grid_y), method='linear')
+grid_c = griddata(result, colors, (grid_x, grid_y), method='nearest')
+print(grid_c)
+plt.imshow(grid_c.T, cmap='gray')
+plt.show()
+
+# fig, axs = plt.subplots(1, 3)
+# axs[0, 0].imshow(grid_a.T, cmap='gray')
+# axs[0, 0].set_title("cubic")
+# axs[0, 1].imshow(grid_b.T, cmap='gray')
+# axs[0, 1].set_title("linear")
+# axs[0, 2].imshow(grid_c.T, cmap='gray')
+# axs[0, 2].set_title("nearest")
+# fig.tight_layout()
+# plt.show()
+# plt.plot(grid_c)
+# plt.scatter(result.real, result.imag, c=colors, cmap='gray', s=1.5)
+# plt.xlim(-10,40)
+# plt.ylim(-2, 2)
 print("complete")
