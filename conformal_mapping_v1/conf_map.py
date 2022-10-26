@@ -170,7 +170,7 @@ mask = grid.reshape(len(raw_img[0]),len(raw_img)) # mask with points inside a po
 mask_points = np.argwhere(mask)
 interior_points = mask_points[:,1] + 1j*mask_points[:,0]
 interior_points_idx = np.argwhere(grid)
-colors = raw_img.flatten()[interior_points_idx].flatten()[::5]
+colors = raw_img.flatten()[interior_points_idx].flatten()
 
 # print(interior_points_idx)
 # print(len(raw_img[0])**2)
@@ -185,31 +185,37 @@ full_worm_ccw_ext = full_worm_ccw_ext[0] + 1j*full_worm_ccw_ext[1]
 eng = matlab.engine.start_matlab()
 input_arr = matlab.double(eng.cell2mat(full_worm_ccw_ext.tolist()), is_complex=True)
 input_bounds = matlab.double(eng.cell2mat(full_worm_ends_ccw), is_complex=True)
-input_interior = matlab.double(eng.cell2mat(interior_points.tolist()[::5]), is_complex=True)
+input_interior = matlab.double(eng.cell2mat(interior_points.tolist()), is_complex=True)
+colors = matlab.uint8(eng.cell2mat(colors.tolist()), is_complex=False)
 print("begin matlab function...")
-result = eng.sc_strip_map(input_arr, input_bounds, input_interior)
-result = np.asarray(result)
+result, result_colors = eng.sc_strip_map(input_arr, input_bounds, input_interior, colors, nargout=2)
+result = np.asarray(result[0])
+colors = np.asarray(result_colors[0])
+print(len(result))
+print(len(colors))
 
 # set up output to become list of lists
-result = [list(i) for i in zip(result[0].real, result[0].imag)]
+result = [list(i) for i in zip(result.real, result.imag)]
 #generate grid data using mgrid
-grid_x,grid_y = np.mgrid[0:25:50000j, 0:1:2000j]
-# grid_a = griddata(result, colors, (grid_x, grid_y), method='nearest')
-# grid_b = griddata(result, colors, (grid_x, grid_y), method='linear')
+grid_x,grid_y = np.mgrid[0:25:25000j, 0:1:1000j]
+grid_a = griddata(result, colors, (grid_x, grid_y), method='cubic')
+grid_b = griddata(result, colors, (grid_x, grid_y), method='linear')
 grid_c = griddata(result, colors, (grid_x, grid_y), method='nearest')
+print(grid_a)
+print(grid_b)
 print(grid_c)
-plt.imshow(grid_c.T, cmap='gray')
-plt.show()
-
-# fig, axs = plt.subplots(1, 3)
-# axs[0, 0].imshow(grid_a.T, cmap='gray')
-# axs[0, 0].set_title("cubic")
-# axs[0, 1].imshow(grid_b.T, cmap='gray')
-# axs[0, 1].set_title("linear")
-# axs[0, 2].imshow(grid_c.T, cmap='gray')
-# axs[0, 2].set_title("nearest")
-# fig.tight_layout()
+# plt.imshow(grid_c.T, cmap='gray')
 # plt.show()
+
+fig, axs = plt.subplots(3, 1)
+axs[0].imshow(grid_a.T, cmap='gray')
+axs[0].set_title("cubic")
+axs[1].imshow(grid_b.T, cmap='gray')
+axs[1].set_title("linear")
+axs[2].imshow(grid_c.T, cmap='gray')
+axs[2].set_title("nearest")
+fig.tight_layout()
+plt.show()
 # plt.plot(grid_c)
 # plt.scatter(result.real, result.imag, c=colors, cmap='gray', s=1.5)
 # plt.xlim(-10,40)
