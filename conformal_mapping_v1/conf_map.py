@@ -23,10 +23,11 @@ def plot_cmplx(z, *a, **k):
     plt.plot(np.real(z), np.imag(z), *a, **k)
 
 # import segmented image
-orig_img = imread('../segmentation_correction/h51/h51_sample_seg.tif')
-raw_img = imread('../segmentation_correction/h51/h51_sample_seg_orig.tif')
+orig_img = imread('../segmentation_correction/h44/h44_sample_seg.tif')
+raw_img = imread('../segmentation_correction/h44/h44_sample_seg_orig.tif')
 # orig_img = imread('./segmentation_correction/h44/h44_sample_seg.tif')
 orig_img = img_as_uint(orig_img)
+# print(orig_img)
 
 # close any areas smaller than 90 px
 area_closed = area_closing(orig_img, 90)
@@ -57,10 +58,13 @@ final = remove_small_objects(fill_worm, 20000)
 state5 = np.copy(final)
 
 # only take the last worm
-for value in np.unique(final):
-    if value != 0 and value != np.unique(final)[-1]:
+print(np.unique(final))
+unique_worms = np.unique(final)
+for value in unique_worms:
+    if value != 0 and value != unique_worms[1]:
         final[final == value] = 0
-
+plt.imshow(final)
+plt.show()
 worm_boundary = segmentation.find_boundaries(final, mode='inner')
 
 pixel_list_row = np.nonzero(worm_boundary)[0]
@@ -171,15 +175,18 @@ mask_points = np.argwhere(mask)
 interior_points = mask_points[:,1] + 1j*mask_points[:,0]
 interior_points_idx = np.argwhere(grid)
 colors = raw_img.flatten()[interior_points_idx].flatten()
-
-# print(interior_points_idx)
-# print(len(raw_img[0])**2)
+plt.scatter(interior_points.real, interior_points.imag)
+plt.show()
 
 # feed into matlab ** MUST BE COUNTERCLOCKWISE DIRECTION **
 ## reverse pts before feed
-full_worm_ccw_ext = np.array([full_bound_data_xi_w[conf_map_points][::-1], full_bound_data_yi_w[conf_map_points][::-1]])
+# full_worm_ccw_ext = np.array([full_bound_data_xi_w[conf_map_points][::-1], full_bound_data_yi_w[conf_map_points][::-1]])
+full_worm_ccw_ext = np.array([full_bound_data_xi_w[conf_map_points], full_bound_data_yi_w[conf_map_points]])
 full_worm_ends_ccw = [1,24]
-# plt.scatter(full_worm_ccw_ext[0], full_worm_ccw_ext[1], c=range(len(full_worm_ccw_ext[0])), cmap="cool")
+plt.scatter(full_worm_ccw_ext[0], full_worm_ccw_ext[1], c=range(len(full_worm_ccw_ext[0])), cmap="cool")
+plt.scatter(full_worm_ccw_ext[0][full_worm_ends_ccw[0]], full_worm_ccw_ext[1][full_worm_ends_ccw[0]], color = 'red')
+plt.scatter(full_worm_ccw_ext[0][full_worm_ends_ccw[1]], full_worm_ccw_ext[1][full_worm_ends_ccw[1]], color = 'red')
+plt.show()
 full_worm_ccw_ext = full_worm_ccw_ext[0] + 1j*full_worm_ccw_ext[1]
 
 eng = matlab.engine.start_matlab()
@@ -191,33 +198,31 @@ print("begin matlab function...")
 result, result_colors = eng.sc_strip_map(input_arr, input_bounds, input_interior, colors, nargout=2)
 result = np.asarray(result[0])
 colors = np.asarray(result_colors[0])
-print(len(result))
-print(len(colors))
+result = result[0]
+colors = colors[0]
+# print(result)
+# print(colors)
 
 # set up output to become list of lists
 result = [list(i) for i in zip(result.real, result.imag)]
 #generate grid data using mgrid
 grid_x,grid_y = np.mgrid[0:25:25000j, 0:1:1000j]
-grid_a = griddata(result, colors, (grid_x, grid_y), method='cubic')
+# grid_a = griddata(result, colors, (grid_x, grid_y), method='cubic')
 grid_b = griddata(result, colors, (grid_x, grid_y), method='linear')
 grid_c = griddata(result, colors, (grid_x, grid_y), method='nearest')
-print(grid_a)
+# print(grid_a)
 print(grid_b)
 print(grid_c)
 # plt.imshow(grid_c.T, cmap='gray')
 # plt.show()
 
-fig, axs = plt.subplots(3, 1)
-axs[0].imshow(grid_a.T, cmap='gray')
-axs[0].set_title("cubic")
+fig, axs = plt.subplots(2, 1)
+# axs[0].imshow(grid_a.T, cmap='gray')
+# axs[0].set_title("cubic")
 axs[1].imshow(grid_b.T, cmap='gray')
 axs[1].set_title("linear")
-axs[2].imshow(grid_c.T, cmap='gray')
-axs[2].set_title("nearest")
+axs[0].imshow(grid_c.T, cmap='gray')
+axs[0].set_title("nearest")
 fig.tight_layout()
 plt.show()
-# plt.plot(grid_c)
-# plt.scatter(result.real, result.imag, c=colors, cmap='gray', s=1.5)
-# plt.xlim(-10,40)
-# plt.ylim(-2, 2)
 print("complete")
