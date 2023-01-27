@@ -13,6 +13,7 @@ from csaps import csaps, CubicSmoothingSpline
 import scipy
 from matplotlib.path import Path
 from scipy.interpolate import griddata
+from stripmap.map import Stripmap, Polygon
 
 def do_kdtree(combined_x_y_arrays,points):
     mytree = scipy.spatial.cKDTree(combined_x_y_arrays)
@@ -23,8 +24,8 @@ def plot_cmplx(z, *a, **k):
     plt.plot(np.real(z), np.imag(z), *a, **k)
 
 # import segmented image
-orig_img = imread('../segmentation_correction/h44/h44_sample_seg.tif')
-raw_img = imread('../segmentation_correction/h44/h44_sample_seg_orig.tif')
+orig_img = imread('../segmentation_correction/h51/h51_sample_seg.tif')
+raw_img = imread('../segmentation_correction/h51/h51_sample_seg_orig.tif')
 # orig_img = imread('./segmentation_correction/h44/h44_sample_seg.tif')
 orig_img = img_as_uint(orig_img)
 # print(orig_img)
@@ -63,8 +64,8 @@ unique_worms = np.unique(final)
 for value in unique_worms:
     if value != 0 and value != unique_worms[1]:
         final[final == value] = 0
-plt.imshow(final)
-plt.show()
+# plt.imshow(final)
+# plt.show()
 worm_boundary = segmentation.find_boundaries(final, mode='inner')
 
 pixel_list_row = np.nonzero(worm_boundary)[0]
@@ -175,50 +176,48 @@ mask_points = np.argwhere(mask)
 interior_points = mask_points[:,1] + 1j*mask_points[:,0]
 interior_points_idx = np.argwhere(grid)
 colors = raw_img.flatten()[interior_points_idx].flatten()
-plt.scatter(interior_points.real, interior_points.imag)
-plt.show()
+# plt.scatter(interior_points.real, interior_points.imag)
+# plt.show()
 
 # feed into matlab ** MUST BE COUNTERCLOCKWISE DIRECTION **
 ## reverse pts before feed
-# full_worm_ccw_ext = np.array([full_bound_data_xi_w[conf_map_points][::-1], full_bound_data_yi_w[conf_map_points][::-1]])
-full_worm_ccw_ext = np.array([full_bound_data_xi_w[conf_map_points], full_bound_data_yi_w[conf_map_points]])
+full_worm_ccw_ext = np.array([full_bound_data_xi_w[conf_map_points][::-1], full_bound_data_yi_w[conf_map_points][::-1]])
+# full_worm_ccw_ext = np.array([full_bound_data_xi_w[conf_map_points], full_bound_data_yi_w[conf_map_points]])
 full_worm_ends_ccw = [1,24]
-plt.scatter(full_worm_ccw_ext[0], full_worm_ccw_ext[1], c=range(len(full_worm_ccw_ext[0])), cmap="cool")
-plt.scatter(full_worm_ccw_ext[0][full_worm_ends_ccw[0]], full_worm_ccw_ext[1][full_worm_ends_ccw[0]], color = 'red')
-plt.scatter(full_worm_ccw_ext[0][full_worm_ends_ccw[1]], full_worm_ccw_ext[1][full_worm_ends_ccw[1]], color = 'red')
-plt.show()
-full_worm_ccw_ext = full_worm_ccw_ext[0] + 1j*full_worm_ccw_ext[1]
+# plt.scatter(full_worm_ccw_ext[0], full_worm_ccw_ext[1], c=range(len(full_worm_ccw_ext[0])), cmap="cool")
+# plt.scatter(full_worm_ccw_ext[0][full_worm_ends_ccw[0]], full_worm_ccw_ext[1][full_worm_ends_ccw[0]], color = 'red')
+# plt.scatter(full_worm_ccw_ext[0][full_worm_ends_ccw[1]], full_worm_ccw_ext[1][full_worm_ends_ccw[1]], color = 'red')
+# plt.show()
+p = Polygon(full_worm_ccw_ext[0].tolist(), full_worm_ccw_ext[1].tolist())
+stripmap = Stripmap(p, list(full_worm_ends_ccw))
+print("map created")
+res = 1000
+x_interior = mask_points[:,1].tolist()[::res]
+y_interior = mask_points[:,0].tolist()[::res]
+interior_mapped = stripmap.evalinv(x_interior, y_interior)
 
-eng = matlab.engine.start_matlab()
-input_arr = matlab.double(eng.cell2mat(full_worm_ccw_ext.tolist()), is_complex=True)
-input_bounds = matlab.double(eng.cell2mat(full_worm_ends_ccw), is_complex=True)
-input_interior = matlab.double(eng.cell2mat(interior_points.tolist()), is_complex=True)
-colors = matlab.uint8(eng.cell2mat(colors.tolist()), is_complex=False)
-print("begin matlab function...")
-result, result_colors = eng.sc_strip_map(input_arr, input_bounds, input_interior, colors, nargout=2)
-result = np.asarray(result[0])
-colors = np.asarray(result_colors[0])
-result = result[0]
-colors = colors[0]
-# print(result)
-# print(colors)
+fig, axs = plt.subplots(2, 1)
+axs[0].plot(full_worm_ccw_ext[0].tolist(), full_worm_ccw_ext[1].tolist())
+axs[0].set_title("original")
+axs[1].scatter(interior_mapped[0], interior_mapped[1], c=colors[::res], cmap='gray')
+axs[1].set_title("inverse mapped")
+fig.tight_layout()
+plt.show()
 
 # set up output to become list of lists
-result = [list(i) for i in zip(result.real, result.imag)]
+result = [list(i) for i in zip(interior_mapped[0], interior_mapped[1])]
 #generate grid data using mgrid
 grid_x,grid_y = np.mgrid[0:25:25000j, 0:1:1000j]
 # grid_a = griddata(result, colors, (grid_x, grid_y), method='cubic')
-grid_b = griddata(result, colors, (grid_x, grid_y), method='linear')
-grid_c = griddata(result, colors, (grid_x, grid_y), method='nearest')
+grid_b = griddata(result, colors[::res], (grid_x, grid_y), method='linear')
+grid_c = griddata(result, colors[::res], (grid_x, grid_y), method='nearest')
 # print(grid_a)
-print(grid_b)
-print(grid_c)
+# print(grid_b)
+# print(grid_c)
 # plt.imshow(grid_c.T, cmap='gray')
 # plt.show()
 
 fig, axs = plt.subplots(2, 1)
-# axs[0].imshow(grid_a.T, cmap='gray')
-# axs[0].set_title("cubic")
 axs[1].imshow(grid_b.T, cmap='gray')
 axs[1].set_title("linear")
 axs[0].imshow(grid_c.T, cmap='gray')
