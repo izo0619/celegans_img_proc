@@ -1,0 +1,3 @@
+[submodule "conformal_mapping_v1/stripmap"]
+	path = conformal_mapping_v1/stripmap
+	url = git@github.com:ajy25/stripmap.git
