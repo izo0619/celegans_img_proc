@@ -16,6 +16,15 @@ error_wells = {}
 # helper functions
 # horizontally concatenates two images
 def get_concat_h(im1, im2):
+    """_summary_
+
+    Args:
+        im1 (_type_): _description_
+        im2 (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     dst = Image.new('I;16', (im1.width + im2.width, im1.height))
     dst.paste(im1, (0, 0))
     dst.paste(im2, (im1.width, 0))
@@ -23,6 +32,15 @@ def get_concat_h(im1, im2):
 
 # vertically concatenates two images
 def get_concat_v(im1, im2):
+    """_summary_
+
+    Args:
+        im1 (_type_): _description_
+        im2 (_type_): _description_
+
+    Returns:
+        _type_: _description_
+    """
     dst = Image.new('I;16', (im1.width, im1.height + im2.height))
     dst.paste(im1, (0, 0))
     dst.paste(im2, (0, im1.height))
@@ -42,6 +60,12 @@ def get_concat_v(im1, im2):
 #     - p02-growth-H02-10X (sub directory)
 #     - ...
 def stitch_well(subdir, well):
+    """_summary_
+
+    Args:
+        subdir (_type_): _description_
+        well (_type_): _description_
+    """
     if os.path.isdir(os.path.join(root_path, subdir)):
         dest_dir = root_path + '/' + subdir + '/stitched_images/'
         # creates a folder called stitched_images if it doesn't exist already
@@ -78,6 +102,8 @@ def stitch_well(subdir, well):
 
 # stitches all wells in the directory together
 def stitch_all_in_dir():
+    """_summary_
+    """
     error_wells = {}
     for subdir in directory_contents:
         if os.path.isdir(os.path.join(root_path, subdir)):
